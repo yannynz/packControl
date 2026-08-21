@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\PackControl.Domain\PackControl.Domain.csproj" />
+    <ProjectReference Include="..\PackControl.Application\PackControl.Application.csproj" />
+    <ProjectReference Include="..\..\..\shared\PackControl.Contracts\PackControl.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Npgsql" Version="9.0.2" />
+    <PackageReference Include="PdfPig" Version="0.1.13" />
+    <PackageReference Include="IxMilia.Dxf" Version="0.8.0" />
+    <PackageReference Include="Unimake.DFe" Version="20260129.1047.45" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

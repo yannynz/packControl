@@ -1,0 +1,59 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-badge"><i class="bi bi-activity"></i></span>
+      <div>
+        <p class="brand-kicker">PackControl</p>
+        <strong>ERP de Facaria</strong>
+      </div>
+    </div>
+
+    <nav class="nav flex-column gap-2">
+      @for (item of navItems; track item.path) {
+        <a
+          class="nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.path === '/painel' }">
+          <i class="bi" [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="system-badge">
+        <span class="dot"></span>
+        MVP operacional ativo
+      </div>
+    </div>
+  </aside>
+
+  <div class="content-area">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Operacao principal</p>
+        <h1>PackControl</h1>
+      </div>
+
+      <div class="topbar-actions">
+        <a class="btn btn-primary" routerLink="/pedidos/novo">
+          <i class="bi bi-plus-circle"></i>
+          Novo Pedido
+        </a>
+
+        <div class="user-pill" *ngIf="authState.user() as user">
+          <div>
+            <strong>{{ user.fullName }}</strong>
+            <small>{{ formatRole(user.role) }}</small>
+          </div>
+          <button class="btn btn-link" type="button" (click)="authState.logout()">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-body">
+      <router-outlet />
+    </main>
+  </div>
+</div>

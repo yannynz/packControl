@@ -1,0 +1,238 @@
+<section class="page-section">
+  @if (order(); as order) {
+    <article class="surface-card hero-card">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Pedido consolidado</p>
+          <h2>{{ order.number }} · {{ order.customerName }}</h2>
+          <div class="hero-meta">
+            <span class="chip">{{ statusLabel }}</span>
+            <span>{{ formatServiceType(order.serviceType) }}</span>
+            <span>{{ formatUrgency(order.urgency) }}</span>
+            <span>Criado em {{ order.createdAtUtc | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        </div>
+
+        <div class="hero-actions">
+          <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+          @if (canApprove) {
+            <button class="btn btn-primary" type="button" [disabled]="approving()" (click)="approve()">
+              @if (approving()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              Aprovar e gerar operacao
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="metric-grid">
+        <article class="metric-card">
+          <span>Itens de escopo</span>
+          <strong>{{ order.scopeItems.length }}</strong>
+        </article>
+        <article class="metric-card">
+          <span>Anexos</span>
+          <strong>{{ order.attachments.length }}</strong>
+        </article>
+        <article class="metric-card">
+          <span>OPs</span>
+          <strong>{{ order.productionOrders.length }}</strong>
+        </article>
+        <article class="metric-card">
+          <span>Saldo financeiro previsto</span>
+          <strong>{{ financeBalance() | currency: 'BRL' }}</strong>
+        </article>
+      </div>
+    </article>
+
+    <div class="tab-row">
+      @for (tab of tabs; track tab) {
+        <button class="tab-pill" type="button" [class.active]="activeTab() === tab" (click)="setTab(tab)">
+          {{ tab }}
+        </button>
+      }
+    </div>
+
+    @if (activeTab() === 'Resumo') {
+      <section class="detail-grid">
+        <article class="surface-card">
+          <h3>Contexto comercial e tecnico</h3>
+
+          <div class="summary-pair">
+            <span>Contexto inicial</span>
+            <strong>{{ order.contextSummary || 'Nao informado' }}</strong>
+          </div>
+          <div class="summary-pair">
+            <span>Referencia antiga</span>
+            <strong>{{ order.legacyAssetReference || 'Sem vinculacao' }}</strong>
+          </div>
+          <div class="summary-pair">
+            <span>Observacoes</span>
+            <strong>{{ order.notes || 'Sem observacoes comerciais.' }}</strong>
+          </div>
+        </article>
+
+        <article class="surface-card">
+          <h3>Financeiro previsto</h3>
+          <div class="soft-list">
+            @for (entry of order.financeEntries; track entry.id) {
+              <div class="soft-card">
+                <strong>{{ entry.type }} · {{ entry.amount | currency: 'BRL' }}</strong>
+                <span>{{ entry.description }}</span>
+                <small>{{ entry.status }} · {{ entry.entrySource }} · {{ entry.paymentMethod }} · vencimento {{ entry.dueAtUtc | date: 'dd/MM/yyyy' }}</small>
+                @if (entry.boletoStatus || entry.boletoNumber) {
+                  <small>Boleto: {{ entry.boletoStatus || 'Gerado' }} · {{ entry.boletoNumber || 'sem numero' }}</small>
+                }
+              </div>
+            } @empty {
+              <p class="empty-state">Sem lancamentos previstos ainda.</p>
+            }
+          </div>
+        </article>
+      </section>
+    }
+
+    @if (activeTab() === 'Arquivos') {
+      <section class="detail-grid">
+        <article class="surface-card">
+          <h3>Anexos recebidos</h3>
+          <div class="soft-list">
+            @for (attachment of order.attachments; track attachment.id) {
+              <div class="soft-card">
+                <strong>{{ attachment.originalFileName }}</strong>
+                <span>{{ attachment.contentType }} · {{ attachment.sizeBytes }} bytes</span>
+                <small>Enviado em {{ attachment.uploadedAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+              </div>
+            } @empty {
+              <p class="empty-state">Nenhum anexo neste pedido.</p>
+            }
+          </div>
+        </article>
+
+        <article class="surface-card">
+          <h3>Analise tecnica</h3>
+          <div class="soft-list">
+            @for (analysis of order.analyses; track analysis.id) {
+              <div class="soft-card">
+                <strong>{{ analysis.sourceFileExtension }} · {{ formatAnalysisStatus(analysis.status) }}</strong>
+                <span>{{ analysis.summary }}</span>
+                <small>{{ analysis.engineName || 'motor interno' }} · confianca {{ analysis.confidencePercent ?? 0 }}%</small>
+                <small>{{ analysis.createdAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+              </div>
+            } @empty {
+              <p class="empty-state">Sem analises tecnicas registradas.</p>
+            }
+          </div>
+        </article>
+      </section>
+    }
+
+    @if (activeTab() === 'Componentes') {
+      <article class="surface-card">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Escopo do atendimento</p>
+            <h3>O que o cliente esta comprando</h3>
+          </div>
+          <a class="btn btn-outline-primary" routerLink="/pedidos/novo">Abrir outro pedido</a>
+        </div>
+
+        <div class="scope-grid">
+          @for (scopeItem of order.scopeItems; track scopeItem.id) {
+            <div class="soft-card scope-card">
+              <div class="scope-top">
+                <strong>{{ scopeItem.title }}</strong>
+                <span class="chip">{{ formatScopeCategory(scopeItem.category) }}</span>
+              </div>
+              <span>Quantidade: {{ scopeItem.quantity }}</span>
+              <small>{{ scopeItem.productName || 'Produto avulso' }} · {{ scopeItem.billingMethod || 'Sem cobranca definida' }}</small>
+              @if (scopeItem.unitPrice) {
+                <small>Valor unitario: {{ scopeItem.unitPrice | currency: 'BRL' }}</small>
+              }
+              <p>{{ scopeItem.notes || 'Sem observacoes adicionais.' }}</p>
+            </div>
+          }
+        </div>
+      </article>
+    }
+
+    @if (activeTab() === 'OPs') {
+      <article class="surface-card">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Ordens de producao</p>
+            <h3>Desdobramento operacional</h3>
+          </div>
+          <a class="btn btn-outline-primary" routerLink="/producao">Ir para producao</a>
+        </div>
+
+        <div class="soft-list">
+          @for (productionOrder of order.productionOrders; track productionOrder.id) {
+            <div class="soft-card">
+              <strong>{{ productionOrder.number }} · {{ productionOrder.sector }}</strong>
+              <span>{{ productionOrder.owner }} · {{ productionOrder.status }}</span>
+              <small>Prazo {{ productionOrder.dueAtUtc | date: 'dd/MM/yyyy' }}</small>
+            </div>
+          } @empty {
+            <p class="empty-state">Este pedido ainda nao gerou OPs.</p>
+          }
+        </div>
+      </article>
+    }
+
+    @if (activeTab() === 'Logistica') {
+      <article class="surface-card">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Lotes e saida</p>
+            <h3>Preparo logistico</h3>
+          </div>
+          <a class="btn btn-outline-primary" routerLink="/logistica">Ir para logistica</a>
+        </div>
+
+        <div class="soft-list">
+          @for (shipment of order.shipments; track shipment.id) {
+            <div class="soft-card">
+              <strong>{{ shipment.shipmentNumber }} · {{ shipment.status }}</strong>
+              <span>{{ shipment.mode }} · recebedor {{ shipment.recipient }}</span>
+              <small>Transportadora: {{ shipment.carrierName || 'Operacao interna' }}</small>
+              <small>Agendado para {{ shipment.scheduledAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+            </div>
+          } @empty {
+            <p class="empty-state">Sem lote logistico gerado ainda.</p>
+          }
+        </div>
+      </article>
+    }
+
+    @if (activeTab() === 'Historico') {
+      <article class="surface-card">
+        <h3>Historico auditavel</h3>
+
+        <div class="timeline">
+          @for (entry of order.history; track entry.id) {
+            <div class="timeline-item">
+              <span class="timeline-dot"></span>
+              <div>
+                <strong>{{ entry.description }}</strong>
+                <span>{{ formatHistoryEvent(entry.eventType) }} · {{ entry.actor }}</span>
+                <small>{{ entry.occurredAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+              </div>
+            </div>
+          } @empty {
+            <p class="empty-state">Nenhum evento auditavel encontrado.</p>
+          }
+        </div>
+      </article>
+    }
+  } @else if (loading()) {
+    <article class="surface-card">
+      <p class="empty-state">Carregando pedido consolidado...</p>
+    </article>
+  } @else {
+    <article class="surface-card">
+      <p class="empty-state">Pedido nao encontrado.</p>
+    </article>
+  }
+</section>

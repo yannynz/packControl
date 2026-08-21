@@ -1,0 +1,19 @@
+.page-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.asset-card {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+@media (max-width: 980px) {
+  .page-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,118 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Painel do dia</p>
+      <h2>Prioridades operacionais</h2>
+    </div>
+
+    <button class="btn btn-outline-primary" type="button" (click)="reload()">
+      <i class="bi bi-arrow-clockwise"></i>
+      Atualizar
+    </button>
+  </div>
+
+  @if (summary(); as data) {
+    <div class="metrics-grid">
+      <article class="metric-card">
+        <span>Clientes</span>
+        <strong>{{ data.customers }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Pedidos</span>
+        <strong>{{ data.orders }}</strong>
+      </article>
+      <article class="metric-card warn">
+        <span>Rascunhos</span>
+        <strong>{{ data.draftOrders }}</strong>
+      </article>
+      <article class="metric-card accent">
+        <span>Anexos aguardando analise</span>
+        <strong>{{ data.attachmentsAwaitingAnalysis }}</strong>
+      </article>
+      <article class="metric-card ok">
+        <span>Pedidos aprovados</span>
+        <strong>{{ data.approvedOrders }}</strong>
+      </article>
+      <article class="metric-card accent">
+        <span>OPs em producao</span>
+        <strong>{{ data.productionOrdersInProgress }}</strong>
+      </article>
+      <article class="metric-card warn">
+        <span>Estoque critico</span>
+        <strong>{{ data.criticalStockItems }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Saidas pendentes</span>
+        <strong>{{ data.pendingShipments }}</strong>
+      </article>
+      <article class="metric-card warn">
+        <span>Titulos vencidos</span>
+        <strong>{{ data.overdueFinanceEntries }}</strong>
+      </article>
+    </div>
+  }
+
+  <div class="board-grid">
+    <article class="surface-card emphasis">
+      <p class="eyebrow">Leitura do dia</p>
+      <h3>Fluxo ponta a ponta em operacao assistida</h3>
+      <p>
+        O produto agora cobre pedido consolidado, aprovacao comercial, projecao de OPs,
+        estoque, logistica e financeiro inicial sobre a mesma base em memoria.
+      </p>
+
+      <div class="cta-row">
+        <a class="btn btn-primary" routerLink="/pedidos/novo">Abrir novo pedido</a>
+        <a class="btn btn-outline-primary" routerLink="/producao">Ir para producao</a>
+      </div>
+    </article>
+
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Ultimos pedidos</p>
+          <h3>Radar comercial</h3>
+        </div>
+        <a routerLink="/pedidos">Ver tudo</a>
+      </div>
+
+      <div class="order-list">
+        @for (order of orders(); track order.id) {
+          <a class="order-row" [routerLink]="['/pedidos', order.id]">
+            <div>
+              <strong>{{ order.number }}</strong>
+              <p>{{ order.customerName }} · {{ order.scopePreview }}</p>
+            </div>
+            <div>
+              <span class="chip">{{ formatStatus(order.status) }}</span>
+              <small>{{ order.createdAtUtc | date: 'dd/MM HH:mm' }}</small>
+            </div>
+          </a>
+        } @empty {
+          <p class="empty-state">Nenhum pedido criado ainda.</p>
+        }
+      </div>
+    </article>
+
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Atalhos operacionais</p>
+          <h3>Onde agir rapido</h3>
+        </div>
+      </div>
+
+      <div class="quick-links">
+        <a routerLink="/clientes">Clientes</a>
+        <a routerLink="/produtos">Produtos</a>
+        <a routerLink="/transportadoras">Transportadoras</a>
+        <a routerLink="/cadastros">Cadastros</a>
+        <a routerLink="/materiais">Materiais</a>
+        <a routerLink="/estoque">Estoque</a>
+        <a routerLink="/logistica">Logistica</a>
+        <a routerLink="/financeiro">Financeiro</a>
+        <a routerLink="/configuracoes">Configuracoes</a>
+      </div>
+    </article>
+  </div>
+</section>

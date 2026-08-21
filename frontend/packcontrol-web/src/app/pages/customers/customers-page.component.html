@@ -1,0 +1,254 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Clientes</p>
+      <h2>Cadastro completo, apelidos, logistica e tabela comercial</h2>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+      <button class="btn btn-primary" type="button" (click)="startCreate()">Novo cliente</button>
+    </div>
+  </div>
+
+  <div class="metric-grid">
+    <article class="metric-card">
+      <span>Total de clientes</span>
+      <strong>{{ customers().length }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Score medio</span>
+      <strong>{{ averageScore() }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Com transportadora padrao</span>
+      <strong>{{ customersWithCarrier() }}</strong>
+    </article>
+  </div>
+
+  @if (message()) {
+    <div class="alert alert-info">{{ message() }}</div>
+  }
+
+  <div class="customer-layout">
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">{{ selectedCustomer() ? 'Edicao' : 'Novo cliente' }}</p>
+          <h3>{{ selectedCustomer()?.name || 'Cadastro completo' }}</h3>
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="form-stack">
+        <div class="dual-grid">
+          <label class="form-label">
+            Nome
+            <input class="form-control" formControlName="name" />
+          </label>
+          <label class="form-label">
+            Documento
+            <input class="form-control" formControlName="documentNumber" />
+          </label>
+        </div>
+
+        <div class="dual-grid">
+          <label class="form-label">
+            Contato principal
+            <input class="form-control" formControlName="contactName" />
+          </label>
+          <label class="form-label">
+            Telefone
+            <input class="form-control" formControlName="phone" />
+          </label>
+        </div>
+
+        <div class="dual-grid">
+          <label class="form-label">
+            E-mail
+            <input class="form-control" formControlName="email" />
+          </label>
+          <label class="form-label">
+            Score comercial
+            <input class="form-control" type="number" formControlName="score" />
+          </label>
+        </div>
+
+        <label class="form-label">
+          Apelidos
+          <input class="form-control" formControlName="nicknamesText" placeholder="Ex.: Pacheco, Grafica Pacheco" />
+        </label>
+
+        <div class="dual-grid">
+          <label class="form-label">
+            Transportadora padrao
+            <select class="form-select" formControlName="defaultCarrierId">
+              <option value="">Sem padrao</option>
+              @for (carrier of carriers(); track carrier.id) {
+                <option [value]="carrier.id">{{ carrier.name }}</option>
+              }
+            </select>
+          </label>
+          <label class="form-label">
+            Modal padrao
+            <select class="form-select" formControlName="defaultDeliveryMode">
+              @for (mode of deliveryModes; track mode) {
+                <option [value]="mode">{{ mode }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <div class="triple-grid">
+          <label class="form-label">
+            CEP
+            <input class="form-control" formControlName="postalCode" />
+          </label>
+          <label class="form-label">
+            Cidade
+            <input class="form-control" formControlName="city" />
+          </label>
+          <label class="form-label">
+            UF
+            <input class="form-control" formControlName="state" />
+          </label>
+        </div>
+
+        <label class="form-label">
+          Codigo do municipio IBGE
+          <input class="form-control" formControlName="cityIbgeCode" placeholder="Ex.: 3550308" />
+        </label>
+
+        <div class="dual-grid">
+          <label class="form-label">
+            IE
+            <input class="form-control" formControlName="stateRegistration" />
+          </label>
+          <label class="form-label">
+            Indicador IE
+            <select class="form-select" formControlName="taxpayerIndicator">
+              @for (indicator of taxpayerIndicators; track indicator) {
+                <option [value]="indicator">{{ indicator }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <div class="address-grid">
+          <label class="form-label">
+            Logradouro
+            <input class="form-control" formControlName="street" />
+          </label>
+          <label class="form-label small">
+            Numero
+            <input class="form-control" formControlName="streetNumber" />
+          </label>
+        </div>
+
+        <div class="dual-grid">
+          <label class="form-label">
+            Bairro
+            <input class="form-control" formControlName="district" />
+          </label>
+          <label class="form-label">
+            Complemento
+            <input class="form-control" formControlName="complement" />
+          </label>
+        </div>
+
+        <label class="form-label">
+          Referencia
+          <input class="form-control" formControlName="referencePoint" />
+        </label>
+
+        <label class="form-label">
+          Observacoes
+          <textarea class="form-control" rows="3" formControlName="notes"></textarea>
+        </label>
+
+        <div class="pricing-header">
+          <div>
+            <p class="eyebrow">Tabela comercial do cliente</p>
+            <h4>Preco e cobranca persistentes por produto</h4>
+          </div>
+          <button class="btn btn-sm btn-outline-primary" type="button" (click)="addPricingRule()">Adicionar regra</button>
+        </div>
+
+        <div formArrayName="productPricingRules" class="pricing-grid">
+          @for (group of pricingRules.controls; track $index) {
+            <div class="pricing-card" [formGroupName]="$index">
+              <div class="dual-grid">
+                <label class="form-label">
+                  Produto
+                  <select class="form-select" formControlName="productTemplateId" (change)="onPricingProductChange($index)">
+                    <option value="">Selecione</option>
+                    @for (product of products(); track product.id) {
+                      <option [value]="product.id">{{ product.name }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="form-label">
+                  Meio de cobranca
+                  <input class="form-control" formControlName="billingMethod" />
+                </label>
+              </div>
+
+              <div class="dual-grid">
+                <label class="form-label">
+                  Valor cliente
+                  <input class="form-control" type="number" formControlName="unitPrice" />
+                </label>
+                <label class="form-label">
+                  Observacoes
+                  <input class="form-control" formControlName="notes" />
+                </label>
+              </div>
+
+              <button class="btn btn-link text-danger p-0" type="button" (click)="removePricingRule($index)">
+                Remover regra
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" type="submit" [disabled]="saving()">
+            @if (saving()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            {{ selectedCustomer() ? 'Salvar cliente' : 'Criar cliente' }}
+          </button>
+        </div>
+      </form>
+    </article>
+
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Base atual</p>
+          <h3>Clientes ativos</h3>
+        </div>
+      </div>
+
+      <div class="customer-grid">
+        @for (customer of customers(); track customer.id) {
+          <button class="customer-card" type="button" [class.active]="selectedCustomerId() === customer.id" (click)="selectCustomer(customer)">
+            <div class="customer-top">
+              <strong>{{ customer.name }}</strong>
+              <span class="chip">{{ customer.score }} pts</span>
+            </div>
+            <span>{{ customer.documentNumber || 'Sem documento informado' }}</span>
+            <small>IE: {{ customer.stateRegistration || 'Nao informada' }} · {{ customer.taxpayerIndicator }}</small>
+            <small>IBGE: {{ customer.cityIbgeCode || 'Nao informado' }}</small>
+            <small>{{ customer.contactName || 'Sem contato principal' }}</small>
+            <small>{{ formatAddress(customer) }}</small>
+            <small>Apelidos: {{ customer.nicknames.join(', ') || 'Sem apelidos' }}</small>
+            <small>Logistica: {{ customer.defaultCarrierName || 'Sem transportadora padrao' }} · {{ customer.defaultDeliveryMode || 'Sem modal' }}</small>
+            <small>Tabela comercial: {{ customer.productPricingRules.length }} regra(s)</small>
+          </button>
+        } @empty {
+          <p class="empty-state">Nenhum cliente cadastrado.</p>
+        }
+      </div>
+    </article>
+  </div>
+</section>

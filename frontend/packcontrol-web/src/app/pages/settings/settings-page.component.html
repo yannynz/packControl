@@ -1,0 +1,465 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Configuracoes</p>
+      <h2>Acessos, estimador e integracoes</h2>
+    </div>
+
+    <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+  </div>
+
+  @if (overview(); as overview) {
+    @if (message()) {
+      <div class="alert alert-info">{{ message() }}</div>
+    }
+
+    <div class="settings-grid">
+      <article class="surface-card">
+        <h3>Usuarios e papeis</h3>
+        <div class="list-grid">
+          @for (user of overview.users; track user.id) {
+            <div class="soft-card">
+              <strong>{{ user.name }}</strong>
+              <span>{{ user.email }}</span>
+              <small>{{ formatRole(user.role) }} · MFA {{ user.mfaRequired ? 'obrigatorio' : 'nao exigido' }}</small>
+            </div>
+          }
+        </div>
+      </article>
+
+      <article class="surface-card">
+        <h3>Parametros do estimador</h3>
+        <div class="list-grid">
+          @for (parameter of overview.estimatorParameters; track parameter.label) {
+            <div class="soft-card">
+              <strong>{{ parameter.label }}</strong>
+              <span>{{ parameter.value }} {{ parameter.unit }}</span>
+            </div>
+          }
+        </div>
+      </article>
+
+      <article class="surface-card">
+        <h3>Empresas e fiscal</h3>
+        <div class="list-grid">
+          @for (company of overview.companies; track company.documentNumber) {
+            <div class="soft-card">
+              <strong>{{ company.tradeName }}</strong>
+              <span>{{ company.documentNumber }} · IE {{ company.stateRegistration }}</span>
+              <small>Serie {{ company.fiscalSeries }} · {{ company.environment }} · NF-e {{ company.nfeEnabled ? 'ativa' : 'desligada' }}</small>
+              <small>{{ company.adapterName }} · certificado {{ company.certificateType }} via {{ company.certificateMedia }}</small>
+            </div>
+          }
+        </div>
+      </article>
+
+      <article class="surface-card">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Fiscal</p>
+            <h3>Onboarding do emitente</h3>
+          </div>
+        </div>
+
+        @if (fiscalCompany(); as company) {
+          <div class="status-panel">
+            <div class="section-heading compact">
+              <div>
+                <p class="eyebrow">Status atual</p>
+                <h3>{{ company.onboardingStatus }}</h3>
+              </div>
+              <span [class]="formatStatusChipClass(company)">{{ company.environment }}</span>
+            </div>
+
+            <div class="status-metrics">
+              <div class="soft-card">
+                <strong>{{ company.principalEmissionMode }}</strong>
+                <span>Meio principal</span>
+              </div>
+              <div class="soft-card">
+                <strong>{{ company.canStartHomologation ? 'Sim' : 'Nao' }}</strong>
+                <span>Pronto para homologacao</span>
+              </div>
+              <div class="soft-card">
+                <strong>{{ company.canIssueInCurrentEnvironment ? 'Sim' : 'Nao' }}</strong>
+                <span>Pode emitir no ambiente atual</span>
+              </div>
+              <div class="soft-card">
+                <strong>{{ company.canGoLive ? 'Sim' : 'Nao' }}</strong>
+                <span>Liberado para producao</span>
+              </div>
+            </div>
+
+            @if (company.blockingIssues.length > 0) {
+              <div class="issue-block">
+                <strong>Bloqueios atuais</strong>
+                <div class="issue-list">
+                  @for (issue of company.blockingIssues; track issue) {
+                    <small>{{ issue }}</small>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (company.pendingActions.length > 0) {
+              <div class="issue-block">
+                <strong>Pendencias para avancar</strong>
+                <div class="issue-list">
+                  @for (issue of company.pendingActions; track issue) {
+                    <small>{{ issue }}</small>
+                  }
+                </div>
+              </div>
+            }
+
+            <div class="action-row">
+              <button class="btn btn-outline-primary" type="button" (click)="runEngineDiagnostic()" [disabled]="diagnosing()">
+                {{ diagnosing() ? 'Testando autorizador...' : 'Testar integracao fiscal' }}
+              </button>
+            </div>
+
+            @if (engineDiagnostic(); as diagnostic) {
+              <div class="issue-block diagnostic-block">
+                <strong>Diagnostico do adaptador</strong>
+                <div class="status-metrics">
+                  <div class="soft-card">
+                    <strong>{{ diagnostic.providerName }}</strong>
+                    <span>Provider</span>
+                  </div>
+                  <div class="soft-card">
+                    <strong>{{ diagnostic.statusCode ?? '-' }}</strong>
+                    <span>Codigo SEFAZ</span>
+                  </div>
+                  <div class="soft-card">
+                    <strong>{{ diagnostic.isReachable ? 'Sim' : 'Nao' }}</strong>
+                    <span>Autorizador alcancavel</span>
+                  </div>
+                  <div class="soft-card">
+                    <strong>{{ diagnostic.canIssueRealNfe ? 'Sim' : 'Nao' }}</strong>
+                    <span>Pode emitir NF-e real</span>
+                  </div>
+                </div>
+
+                <div class="issue-list">
+                  <small>{{ diagnostic.status }} · {{ diagnostic.message }}</small>
+                  <small>Adapter {{ diagnostic.adapterName }} · ambiente {{ diagnostic.environment }} · UF {{ diagnostic.stateCode }}</small>
+                  <small>Suporte configurado para emissao real: {{ diagnostic.supportsRealEmission ? 'Sim' : 'Nao' }}</small>
+                  @if (diagnostic.applicationVersion) {
+                    <small>Versao do autorizador: {{ diagnostic.applicationVersion }}</small>
+                  }
+                  <small>Ultima checagem: {{ diagnostic.checkedAtUtc | date: 'dd/MM/yyyy HH:mm:ss' }}</small>
+                </div>
+
+                @if (diagnostic.blockingIssues.length > 0) {
+                  <div class="issue-block">
+                    <strong>Bloqueios para NF-e real</strong>
+                    <div class="issue-list">
+                      @for (issue of diagnostic.blockingIssues; track issue) {
+                        <small>{{ issue }}</small>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (diagnostic.rawResponse) {
+                  <label class="form-label">
+                    Retorno bruto
+                    <textarea class="form-control diagnostic-raw" rows="6" [value]="diagnostic.rawResponse" readonly></textarea>
+                  </label>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <form class="form-stack" [formGroup]="companyForm" (ngSubmit)="saveCompany()">
+          <div class="dual-grid">
+            <label class="form-label">
+              Razao social / nome empresarial
+              <input class="form-control" formControlName="tradeName" />
+            </label>
+            <label class="form-label">
+              CNPJ
+              <input class="form-control" formControlName="documentNumber" />
+            </label>
+          </div>
+
+          <div class="triple-grid">
+            <label class="form-label">
+              IE
+              <input class="form-control" formControlName="stateRegistration" />
+            </label>
+            <label class="form-label">
+              Regime tributario
+              <select class="form-select" formControlName="taxRegime">
+                @for (regime of taxRegimes; track regime) {
+                  <option [value]="regime">{{ regime }}</option>
+                }
+              </select>
+            </label>
+            <label class="form-label">
+              Serie
+              <input class="form-control" formControlName="fiscalSeries" />
+            </label>
+          </div>
+
+          <div class="triple-grid">
+            <label class="form-label">
+              Ambiente
+              <select class="form-select" formControlName="environment">
+                @for (environment of environments; track environment) {
+                  <option [value]="environment">{{ environment }}</option>
+                }
+              </select>
+            </label>
+            <label class="form-label">
+              Meio principal
+              <select class="form-select" formControlName="principalEmissionMode">
+                @for (mode of emissionModes; track mode) {
+                  <option [value]="mode">{{ mode }}</option>
+                }
+              </select>
+            </label>
+            <label class="form-label">
+              Meio contingente/opcional
+              <select class="form-select" formControlName="contingencyEmissionMode">
+                <option value="">Sem contingencia definida</option>
+                @for (mode of emissionModes; track mode) {
+                  <option [value]="mode">{{ mode }}</option>
+                }
+              </select>
+            </label>
+          </div>
+
+          <div class="section-heading compact form-subheading">
+            <div>
+              <p class="eyebrow">Endereco fiscal</p>
+              <h3>Sao Paulo no primeiro rollout</h3>
+            </div>
+          </div>
+
+          <div class="triple-grid">
+            <label class="form-label">
+              CEP
+              <input class="form-control" formControlName="postalCode" />
+            </label>
+            <label class="form-label">
+              Rua / avenida
+              <input class="form-control" formControlName="street" />
+            </label>
+            <label class="form-label">
+              Numero
+              <input class="form-control" formControlName="streetNumber" />
+            </label>
+          </div>
+
+          <div class="triple-grid">
+            <label class="form-label">
+              Bairro
+              <input class="form-control" formControlName="district" />
+            </label>
+            <label class="form-label">
+              Cidade
+              <input class="form-control" formControlName="city" />
+            </label>
+            <label class="form-label">
+              UF
+              <input class="form-control" formControlName="stateCode" />
+            </label>
+          </div>
+
+          <label class="form-label">
+            Codigo do municipio IBGE
+            <input class="form-control" formControlName="cityIbgeCode" />
+          </label>
+
+          <div class="dual-grid">
+            <label class="form-label">
+              Pais
+              <input class="form-control" formControlName="country" />
+            </label>
+            <label class="form-label">
+              Complemento
+              <input class="form-control" formControlName="complement" />
+            </label>
+          </div>
+
+          <div class="section-heading compact form-subheading">
+            <div>
+              <p class="eyebrow">Certificado e adaptador</p>
+              <h3>Meio tecnico do emitente</h3>
+            </div>
+          </div>
+
+          <div class="triple-grid">
+            <label class="form-label">
+              Adapter
+              <select class="form-select" formControlName="adapterName">
+                @for (adapter of adapterOptions; track adapter) {
+                  <option [value]="adapter">{{ adapter }}</option>
+                }
+              </select>
+            </label>
+            <label class="form-label">
+              Cobertura de certificado
+              <input class="form-control" formControlName="certificateType" />
+            </label>
+            <label class="form-label">
+              Midia
+              <input class="form-control" formControlName="certificateMedia" />
+            </label>
+          </div>
+
+          <div class="dual-grid">
+            <label class="form-label">
+              Label do certificado
+              <input class="form-control" formControlName="certificateLabel" />
+            </label>
+            <label class="form-label">
+              Serial do certificado
+              <input class="form-control" formControlName="certificateSerialNumber" />
+            </label>
+          </div>
+
+          <label class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="nfeEnabled" />
+            <span class="form-check-label">NF-e habilitada para esta empresa</span>
+          </label>
+
+          <div class="section-heading compact form-subheading">
+            <div>
+              <p class="eyebrow">Checklist interno</p>
+              <h3>Liberacao do emitente</h3>
+            </div>
+          </div>
+
+          <div class="check-grid">
+            <label class="form-check soft-card toggle-card">
+              <input class="form-check-input" type="checkbox" formControlName="accountantValidated" />
+              <span class="form-check-label">Matriz validada pelo contador</span>
+            </label>
+            <label class="form-check soft-card toggle-card">
+              <input class="form-check-input" type="checkbox" formControlName="homologationCredentialsValidated" />
+              <span class="form-check-label">Credenciais testadas em homologacao</span>
+            </label>
+            <label class="form-check soft-card toggle-card">
+              <input class="form-check-input" type="checkbox" formControlName="homologationApproved" />
+              <span class="form-check-label">Homologacao aprovada</span>
+            </label>
+            <label class="form-check soft-card toggle-card">
+              <input class="form-check-input" type="checkbox" formControlName="productionCredentialsValidated" />
+              <span class="form-check-label">Credenciais de producao validadas</span>
+            </label>
+            <label class="form-check soft-card toggle-card">
+              <input class="form-check-input" type="checkbox" formControlName="productionApproved" />
+              <span class="form-check-label">Emitente liberado para producao</span>
+            </label>
+          </div>
+
+          <label class="form-label">
+            Observacoes de onboarding
+            <textarea class="form-control" rows="3" formControlName="onboardingNotes"></textarea>
+          </label>
+
+          <div class="action-row">
+            <button class="btn btn-primary" type="submit" [disabled]="saving()">Salvar perfil fiscal</button>
+          </div>
+        </form>
+      </article>
+
+      <article class="surface-card">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Fiscal</p>
+            <h3>Templates de operacao</h3>
+          </div>
+          <button class="btn btn-outline-primary" type="button" (click)="newTemplate()">Novo template</button>
+        </div>
+
+        <form class="form-stack" [formGroup]="templateForm" (ngSubmit)="saveTemplate()">
+          <div class="dual-grid">
+            <label class="form-label">
+              Nome
+              <input class="form-control" formControlName="name" />
+            </label>
+            <label class="form-label">
+              Natureza da operacao
+              <input class="form-control" formControlName="natureOfOperation" />
+            </label>
+          </div>
+
+          <div class="triple-grid">
+            <label class="form-label">
+              CFOP
+              <input class="form-control" formControlName="cfop" />
+            </label>
+            <label class="form-label">
+              Finalidade
+              <input class="form-control" formControlName="finality" />
+            </label>
+            <label class="form-check inline-check">
+              <input class="form-check-input" type="checkbox" formControlName="active" />
+              <span class="form-check-label">Template ativo</span>
+            </label>
+          </div>
+
+          <label class="form-label">
+            Observacoes
+            <textarea class="form-control" rows="3" formControlName="notes"></textarea>
+          </label>
+
+          <div class="action-row">
+            <button class="btn btn-primary" type="submit" [disabled]="saving()">
+              {{ selectedTemplateId() ? 'Atualizar template' : 'Criar template' }}
+            </button>
+          </div>
+        </form>
+
+        @if (fiscalOverview(); as fiscalOverview) {
+          <div class="list-grid">
+            @for (template of fiscalOverview.operationTemplates; track template.id) {
+              <button class="soft-card template-card" type="button" (click)="editTemplate(template)">
+                <strong>{{ template.name }}</strong>
+                <span>{{ template.natureOfOperation }} · CFOP {{ template.cfop }}</span>
+                <small>{{ template.finality }} · {{ template.active ? 'ativo' : 'inativo' }}</small>
+              </button>
+            }
+          </div>
+        }
+      </article>
+
+      <article class="surface-card">
+        <h3>Agentes A3</h3>
+        @if (fiscalOverview(); as fiscalOverview) {
+          <div class="list-grid">
+            @for (agent of fiscalOverview.agents; track agent.id) {
+              <div class="soft-card">
+                <strong>{{ agent.name }}</strong>
+                <span>{{ agent.hostname }} · {{ agent.certificateMedia }}</span>
+                <small>{{ agent.status }} · ultimo sinal {{ agent.lastSeenAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+                <small>{{ agent.notes }}</small>
+              </div>
+            }
+          </div>
+        }
+      </article>
+
+      <article class="surface-card">
+        <h3>Integracoes</h3>
+        <div class="list-grid">
+          @for (integration of overview.integrations; track integration.name) {
+            <div class="soft-card">
+              <strong>{{ integration.name }}</strong>
+              <span>{{ integration.status }}</span>
+              <small>{{ integration.notes }}</small>
+            </div>
+          }
+        </div>
+      </article>
+    </div>
+  } @else if (loading()) {
+    <article class="surface-card">
+      <p class="empty-state">Carregando configuracoes...</p>
+    </article>
+  }
+</section>

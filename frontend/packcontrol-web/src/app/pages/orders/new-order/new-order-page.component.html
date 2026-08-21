@@ -1,0 +1,368 @@
+<section class="page-grid">
+  <div class="editor-panel">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Novo pedido</p>
+        <h2>Abertura comercial, produto e operacao</h2>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="editor-stack">
+      <article class="surface-card">
+        <div class="card-header">
+          <h3>1. Cliente</h3>
+        </div>
+
+        <label class="form-label">
+          Cliente
+          <select class="form-select" formControlName="customerId" (change)="onCustomerChange()">
+            @for (customer of customers(); track customer.id) {
+              <option [value]="customer.id">{{ customer.name }}</option>
+            }
+          </select>
+        </label>
+
+        <div [formGroup]="customerForm" class="customer-stack">
+          <div class="inline-grid two">
+            <label class="form-label">
+              Nome do novo cliente
+              <input class="form-control" formControlName="name" />
+            </label>
+            <label class="form-label">
+              Documento
+              <input class="form-control" formControlName="documentNumber" />
+            </label>
+          </div>
+
+          <div class="inline-grid three">
+            <label class="form-label">
+              Contato
+              <input class="form-control" formControlName="contactName" />
+            </label>
+            <label class="form-label">
+              Email
+              <input class="form-control" formControlName="email" />
+            </label>
+            <label class="form-label">
+              Telefone
+              <input class="form-control" formControlName="phone" />
+            </label>
+          </div>
+
+          <div class="inline-grid two">
+            <label class="form-label">
+              Apelidos
+              <input class="form-control" formControlName="nicknamesText" placeholder="Ex.: Pacheco, Grafica Pacheco" />
+            </label>
+            <label class="form-label">
+              Transportadora padrao
+              <select class="form-select" formControlName="defaultCarrierId">
+                <option value="">Sem padrao</option>
+                @for (carrier of carriers(); track carrier.id) {
+                  <option [value]="carrier.id">{{ carrier.name }}</option>
+                }
+              </select>
+            </label>
+          </div>
+
+          <div class="inline-grid four">
+            <label class="form-label">
+              CEP
+              <input class="form-control" formControlName="postalCode" />
+            </label>
+            <label class="form-label">
+              Cidade
+              <input class="form-control" formControlName="city" />
+            </label>
+            <label class="form-label">
+              UF
+              <input class="form-control" formControlName="state" />
+            </label>
+            <label class="form-label">
+              Modal padrao
+              <select class="form-select" formControlName="defaultDeliveryMode">
+                @for (mode of deliveryModes; track mode) {
+                  <option [value]="mode">{{ mode }}</option>
+                }
+              </select>
+            </label>
+          </div>
+
+          <div class="inline-grid two">
+            <label class="form-label">
+              Logradouro
+              <input class="form-control" formControlName="street" />
+            </label>
+            <label class="form-label">
+              Numero
+              <input class="form-control" formControlName="streetNumber" />
+            </label>
+          </div>
+
+          <div class="inline-grid three">
+            <label class="form-label">
+              Bairro
+              <input class="form-control" formControlName="district" />
+            </label>
+            <label class="form-label">
+              Complemento
+              <input class="form-control" formControlName="complement" />
+            </label>
+            <label class="form-label">
+              Score
+              <input class="form-control" type="number" formControlName="score" />
+            </label>
+          </div>
+        </div>
+
+        <button class="btn btn-outline-primary" type="button" (click)="createCustomer()" [disabled]="customerSaving()">
+          Criar cliente completo
+        </button>
+      </article>
+
+      <article class="surface-card">
+        <div class="card-header">
+          <h3>2. Atendimento</h3>
+        </div>
+
+        <div class="segmented-grid">
+          @for (type of serviceTypes; track type.value) {
+            <button
+              class="segment"
+              type="button"
+              [class.active]="form.controls.serviceType.value === type.value"
+              (click)="setServiceType(type.value)">
+              <strong>{{ type.label }}</strong>
+              <small>{{ type.helper }}</small>
+            </button>
+          }
+        </div>
+
+        <div class="segmented-grid urgency">
+          @for (level of urgencyLevels; track level.value) {
+            <button
+              class="segment"
+              type="button"
+              [class.active]="form.controls.urgency.value === level.value"
+              (click)="setUrgency(level.value)">
+              {{ level.label }}
+            </button>
+          }
+        </div>
+
+        <label class="form-label">
+          Contexto inicial do atendimento
+          <textarea
+            class="form-control"
+            rows="3"
+            formControlName="contextSummary"
+            placeholder="Opcional: telefone, urgencia comercial, restricoes do cliente ou historico."></textarea>
+        </label>
+
+        <label class="form-label">
+          Ativo tecnico do cliente
+          <select class="form-select" formControlName="assetId" (change)="onAssetChange()">
+            <option value="">Sem ativo preexistente</option>
+            @for (asset of availableAssets(); track asset.id) {
+              <option [value]="asset.id">{{ asset.code }} · {{ asset.alias }} · {{ asset.revision }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="form-label">
+          Referencia de ativo antigo
+          <input
+            class="form-control"
+            formControlName="legacyAssetReference"
+            placeholder="Opcional: codigo, apelido da faca antiga ou referencia do cliente." />
+        </label>
+
+        <label class="form-label">
+          Observacoes comerciais
+          <textarea class="form-control" rows="3" formControlName="notes"></textarea>
+        </label>
+      </article>
+
+      <article class="surface-card">
+        <div class="card-header">
+          <div>
+            <h3>3. Escopo e produtos</h3>
+            <small class="muted">Aqui nasce a OP. Produto, cobranca e quantidade alimentam producao, estoque e financeiro.</small>
+          </div>
+          <button class="btn btn-sm btn-outline-primary" type="button" (click)="addScopeItem()">
+            Adicionar item
+          </button>
+        </div>
+
+        <div formArrayName="scopeItems" class="scope-stack">
+          @for (group of scopeItems.controls; track $index) {
+            <div class="scope-card" [formGroupName]="$index">
+              <div class="scope-row four">
+                <label class="form-label">
+                  Produto comercial
+                  <select class="form-select" formControlName="productTemplateId" (change)="onProductChange($index)">
+                    <option value="">Avulso/manual</option>
+                    @for (product of products(); track product.id) {
+                      <option [value]="product.id">{{ product.name }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="form-label">
+                  Titulo
+                  <input class="form-control" formControlName="title" />
+                </label>
+                <label class="form-label">
+                  Categoria
+                  <select class="form-select" formControlName="category">
+                    @for (category of categories; track category.value) {
+                      <option [value]="category.value">{{ category.label }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="form-label qty">
+                  Qtde
+                  <input class="form-control" type="number" formControlName="quantity" />
+                </label>
+              </div>
+
+              <div class="scope-row four">
+                <label class="form-label">
+                  Nome comercial
+                  <input class="form-control" formControlName="productName" />
+                </label>
+                <label class="form-label">
+                  Meio de cobranca
+                  <input class="form-control" formControlName="billingMethod" />
+                </label>
+                <label class="form-label">
+                  Valor unitario
+                  <input class="form-control" type="number" formControlName="unitPrice" />
+                </label>
+                <label class="form-label">
+                  Observacoes
+                  <input class="form-control" formControlName="notes" />
+                </label>
+              </div>
+
+              @if (selectedCustomer()?.productPricingRules?.length) {
+                <small class="muted">Tabela comercial do cliente aplicada automaticamente quando houver override para o produto selecionado.</small>
+              }
+
+              <button class="btn btn-link text-danger p-0" type="button" (click)="removeScopeItem($index)">
+                Remover item
+              </button>
+            </div>
+          }
+        </div>
+      </article>
+
+      <div class="action-row">
+        <button class="btn btn-primary btn-lg" [disabled]="saving()" type="submit">
+          @if (saving()) {
+            <span class="spinner-border spinner-border-sm me-2"></span>
+          }
+          Criar pedido
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <aside class="summary-panel">
+    <article class="surface-card sticky">
+      <p class="eyebrow">Resumo</p>
+      <h3>Pedido atual</h3>
+
+      @if (message()) {
+        <div class="alert alert-info">{{ message() }}</div>
+      }
+
+      <div class="summary-kv">
+        <span>Total estimado do escopo</span>
+        <strong>{{ estimatedTotal() | currency: 'BRL' }}</strong>
+      </div>
+      <div class="summary-kv">
+        <span>Itens de escopo</span>
+        <strong>{{ scopeItems.length }}</strong>
+      </div>
+
+      @if (createdOrder(); as order) {
+        <div class="summary-kv">
+          <span>Numero</span>
+          <strong>{{ order.number }}</strong>
+        </div>
+        <div class="summary-kv">
+          <span>Status</span>
+          <strong>{{ formatStatus(order.status) }}</strong>
+        </div>
+        <div class="summary-kv">
+          <span>Cliente</span>
+          <strong>{{ order.customerName }}</strong>
+        </div>
+        <div class="summary-kv">
+          <span>Criado em</span>
+          <strong>{{ order.createdAtUtc | date: 'dd/MM/yyyy HH:mm' }}</strong>
+        </div>
+
+        <div class="summary-kv">
+          <span>Contexto</span>
+          <strong>{{ order.contextSummary || 'Sem contexto textual' }}</strong>
+        </div>
+
+        <div class="upload-box">
+          <label class="form-label">
+            Anexar PDF ou DXF
+            <input class="form-control" type="file" (change)="uploadAttachment($event)" />
+          </label>
+          @if (uploading()) {
+            <div class="mini muted">Enviando arquivo...</div>
+          }
+        </div>
+
+        <div class="action-row">
+          <a class="btn btn-outline-primary" [routerLink]="['/pedidos', order.id]">Abrir consolidado</a>
+        </div>
+
+        <div class="summary-block">
+          <h4>Escopo criado</h4>
+          @for (scopeItem of order.scopeItems; track scopeItem.id) {
+            <div class="mini-card">
+              <strong>{{ scopeItem.title }} · {{ scopeItem.quantity }} un.</strong>
+              <span>{{ scopeItem.productName || 'Produto avulso' }} · {{ scopeItem.billingMethod || 'Sem cobranca definida' }}</span>
+              <p>{{ (scopeItem.unitPrice || 0) | currency: 'BRL' }}</p>
+            </div>
+          }
+        </div>
+
+        <div class="summary-block">
+          <h4>Anexos</h4>
+          @for (attachment of order.attachments; track attachment.id) {
+            <div class="mini-card">
+              <strong>{{ attachment.originalFileName }}</strong>
+              <span>{{ attachment.contentType }} · {{ attachment.sizeBytes }} bytes</span>
+            </div>
+          } @empty {
+            <p class="empty-state">Nenhum anexo enviado ainda.</p>
+          }
+        </div>
+
+        <div class="summary-block">
+          <h4>Analise tecnica</h4>
+          @for (analysis of order.analyses; track analysis.id) {
+            <div class="mini-card">
+              <strong>{{ analysis.sourceFileExtension }}</strong>
+              <span>{{ formatAnalysisStatus(analysis.status) }}</span>
+              <p>{{ analysis.summary }}</p>
+              <small>{{ analysis.engineName || 'motor interno' }} · confianca {{ analysis.confidencePercent ?? 0 }}%</small>
+            </div>
+          } @empty {
+            <p class="empty-state">Sem arquivos elegiveis para analise ainda.</p>
+          }
+        </div>
+      } @else {
+        <p class="empty-state">
+          Monte o escopo do cliente. O texto do atendimento continua opcional, mas produto, quantidade e cobranca agora comandam a operacao.
+        </p>
+      }
+    </article>
+  </aside>
+</section>

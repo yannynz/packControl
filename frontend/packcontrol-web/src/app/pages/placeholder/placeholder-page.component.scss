@@ -1,0 +1,18 @@
+.placeholder-shell {
+  display: grid;
+}
+
+.surface-card {
+  max-width: 48rem;
+  padding: 1.6rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(18, 35, 61, 0.08);
+  border-radius: 1.4rem;
+  box-shadow: 0 18px 38px rgba(31, 51, 84, 0.08);
+}
+
+.cta-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}

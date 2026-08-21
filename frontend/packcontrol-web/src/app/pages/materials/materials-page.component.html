@@ -1,0 +1,49 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Materiais</p>
+      <h2>Base tecnica e risco de falta</h2>
+    </div>
+
+    <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+  </div>
+
+  <div class="material-grid">
+    @for (material of materials(); track material.id) {
+      <article class="surface-card material-card">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">{{ formatCategory(material.category) }}</p>
+            <h3>{{ material.name }}</h3>
+          </div>
+          <span class="chip">{{ material.riskLevel }}</span>
+        </div>
+
+        <div class="info-row">
+          <span>Tipo tecnico</span>
+          <strong>{{ formatTechnicalType(material.technicalType) }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Fornecedor principal</span>
+          <strong>{{ material.mainSupplier }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Custo padrao</span>
+          <strong>{{ material.standardCost | currency: 'BRL' }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Lead time</span>
+          <strong>{{ material.leadTimeDays }} dias</strong>
+        </div>
+        <div class="info-row">
+          <span>Unidade</span>
+          <strong>{{ material.unit }}</strong>
+        </div>
+      </article>
+    } @empty {
+      <article class="surface-card">
+        <p class="empty-state">Nenhum material cadastrado.</p>
+      </article>
+    }
+  </div>
+</section>

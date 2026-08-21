@@ -1,0 +1,69 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Logistica</p>
+      <h2>Lotes, checklist e saida</h2>
+    </div>
+
+    <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+  </div>
+
+  @if (overview(); as overview) {
+    <div class="metric-grid">
+      <article class="metric-card">
+        <span>Pendentes</span>
+        <strong>{{ overview.pendingShipments }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Saidas de hoje</span>
+        <strong>{{ overview.todayShipments }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Ocorrencias adversas</span>
+        <strong>{{ overview.adverseShipments }}</strong>
+      </article>
+    </div>
+
+    <div class="shipment-grid">
+      @for (shipment of overview.shipments; track shipment.id) {
+        <article class="surface-card shipment-card">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">{{ shipment.orderNumber }}</p>
+              <h3>{{ shipment.shipmentNumber }}</h3>
+            </div>
+            <span class="chip">{{ shipment.status }}</span>
+          </div>
+
+          <strong>{{ shipment.customerName }}</strong>
+          <span class="muted">{{ shipment.mode }} · recebedor {{ shipment.recipient }}</span>
+          <span class="muted">Transportadora: {{ shipment.carrierName || 'Operacao interna' }}</span>
+          <span class="muted">{{ shipment.driverName }} · {{ shipment.vehiclePlate }}</span>
+          <small class="muted">Checklist: {{ shipment.checklistStatus }}</small>
+          <small class="muted">Agendamento {{ shipment.scheduledAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+
+          <div class="action-row">
+            <a class="btn btn-outline-primary" [routerLink]="['/pedidos', shipment.orderId]">Abrir pedido</a>
+            <button class="btn btn-outline-primary" type="button" [disabled]="actingId() === shipment.id" (click)="markWithdrawal(shipment)">
+              Retirada
+            </button>
+            <button class="btn btn-outline-danger" type="button" [disabled]="actingId() === shipment.id" (click)="markAdverse(shipment)">
+              Saida adversa
+            </button>
+            <button class="btn btn-primary" type="button" [disabled]="actingId() === shipment.id" (click)="dispatch(shipment)">
+              Confirmar saida
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <article class="surface-card">
+          <p class="empty-state">Nenhum lote logistico encontrado.</p>
+        </article>
+      }
+    </div>
+  } @else if (loading()) {
+    <article class="surface-card">
+      <p class="empty-state">Carregando logistica...</p>
+    </article>
+  }
+</section>

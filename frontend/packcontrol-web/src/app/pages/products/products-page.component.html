@@ -1,0 +1,239 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Produtos</p>
+      <h2>Catalogo comercial, cobranca e consumo padrao</h2>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+      <button class="btn btn-primary" type="button" (click)="newProduct()">Novo produto</button>
+    </div>
+  </div>
+
+  <div class="metric-grid">
+    <article class="metric-card">
+      <span>Total</span>
+      <strong>{{ products().length }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Ativos</span>
+      <strong>{{ activeProducts() }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Materiais no catalogo</span>
+      <strong>{{ materials().length }}</strong>
+    </article>
+  </div>
+
+  @if (message()) {
+    <div class="alert alert-info">{{ message() }}</div>
+  }
+
+  <div class="products-layout">
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">{{ selectedProduct() ? 'Edicao' : 'Novo produto' }}</p>
+          <h3>{{ selectedProduct()?.name || 'Cadastro comercial' }}</h3>
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="form-stack">
+        <div class="dual-grid">
+          <label class="form-label">
+            Nome do produto
+            <input class="form-control" formControlName="name" />
+          </label>
+          <label class="form-label">
+            Categoria
+            <select class="form-select" formControlName="category">
+              @for (category of categories; track category.value) {
+                <option [value]="category.value">{{ category.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <label class="form-label">
+          Descricao comercial
+          <textarea class="form-control" rows="3" formControlName="description"></textarea>
+        </label>
+
+        <div class="triple-grid">
+          <label class="form-label">
+            Meio de cobranca
+            <select class="form-select" formControlName="billingMethod">
+              @for (method of billingMethods; track method) {
+                <option [value]="method">{{ method }}</option>
+              }
+            </select>
+          </label>
+          <label class="form-label">
+            Valor base
+            <input class="form-control" type="number" formControlName="defaultUnitPrice" />
+          </label>
+          <label class="form-label">
+            Setor inicial
+            <select class="form-select" formControlName="defaultProductionSector">
+              @for (sector of sectors; track sector) {
+                <option [value]="sector">{{ sector }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <div class="requirements-head">
+          <div>
+            <p class="eyebrow">Defaults fiscais</p>
+            <h4>Base canonica do item fiscal</h4>
+          </div>
+        </div>
+
+        <div class="triple-grid">
+          <label class="form-label">
+            NCM
+            <input class="form-control" formControlName="fiscalNcm" />
+          </label>
+          <label class="form-label">
+            CFOP padrao
+            <input class="form-control" formControlName="fiscalCfop" />
+          </label>
+          <label class="form-label">
+            Unidade fiscal
+            <select class="form-select" formControlName="fiscalCommercialUnit">
+              @for (unit of fiscalUnits; track unit) {
+                <option [value]="unit">{{ unit }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <div class="triple-grid">
+          <label class="form-label">
+            Origem
+            <input class="form-control" formControlName="fiscalOriginCode" />
+          </label>
+          <label class="form-label">
+            CST/CSOSN ICMS
+            <input class="form-control" formControlName="fiscalIcmsSituationCode" />
+          </label>
+          <label class="form-label">
+            CST IPI
+            <input class="form-control" formControlName="fiscalIpiSituationCode" />
+          </label>
+        </div>
+
+        <div class="dual-grid">
+          <label class="form-label">
+            CST PIS
+            <input class="form-control" formControlName="fiscalPisSituationCode" />
+          </label>
+          <label class="form-label">
+            CST COFINS
+            <input class="form-control" formControlName="fiscalCofinsSituationCode" />
+          </label>
+        </div>
+
+        <div class="quad-grid">
+          <label class="form-label">
+            Aliquota ICMS %
+            <input class="form-control" type="number" formControlName="fiscalIcmsRate" />
+          </label>
+          <label class="form-label">
+            Aliquota IPI %
+            <input class="form-control" type="number" formControlName="fiscalIpiRate" />
+          </label>
+          <label class="form-label">
+            Aliquota PIS %
+            <input class="form-control" type="number" formControlName="fiscalPisRate" />
+          </label>
+          <label class="form-label">
+            Aliquota COFINS %
+            <input class="form-control" type="number" formControlName="fiscalCofinsRate" />
+          </label>
+        </div>
+
+        <label class="form-check">
+          <input class="form-check-input" type="checkbox" formControlName="active" />
+          <span class="form-check-label">Produto ativo para novas OPs</span>
+        </label>
+
+        <div class="requirements-head">
+          <div>
+            <p class="eyebrow">Consumo de estoque</p>
+            <h4>Materiais por unidade</h4>
+          </div>
+
+          <button class="btn btn-sm btn-outline-primary" type="button" (click)="addRequirement()">Adicionar material</button>
+        </div>
+
+        <div formArrayName="materialRequirements" class="requirements-grid">
+          @for (group of materialRequirements.controls; track $index) {
+            <div class="requirement-card" [formGroupName]="$index">
+              <div class="requirement-row">
+                <label class="form-label">
+                  Material
+                  <select class="form-select" formControlName="materialId" (change)="onMaterialChange($index)">
+                    <option value="">Selecione</option>
+                    @for (material of materials(); track material.id) {
+                      <option [value]="material.id">{{ material.name }}</option>
+                    }
+                  </select>
+                </label>
+                <label class="form-label qty">
+                  Quantidade
+                  <input class="form-control" type="number" formControlName="quantityPerUnit" />
+                </label>
+                <label class="form-label unit">
+                  Unidade
+                  <input class="form-control" formControlName="unit" />
+                </label>
+              </div>
+
+              <button class="btn btn-link text-danger p-0" type="button" (click)="removeRequirement($index)">
+                Remover material
+              </button>
+            </div>
+          }
+        </div>
+
+        <div class="action-row">
+          <button class="btn btn-primary" type="submit" [disabled]="saving()">
+            @if (saving()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            {{ selectedProduct() ? 'Salvar produto' : 'Criar produto' }}
+          </button>
+        </div>
+      </form>
+    </article>
+
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Catalogo atual</p>
+          <h3>Produtos comercializados</h3>
+        </div>
+      </div>
+
+      <div class="product-grid">
+        @for (product of products(); track product.id) {
+          <button class="product-card" type="button" [class.active]="selectedProductId() === product.id" (click)="selectProduct(product)">
+            <div class="product-top">
+              <strong>{{ product.name }}</strong>
+              <span class="chip">{{ product.active ? 'Ativo' : 'Inativo' }}</span>
+            </div>
+            <small>{{ categoryLabel(product.category) }} · {{ product.defaultProductionSector }}</small>
+            <small>{{ product.billingMethod }} · {{ product.defaultUnitPrice | currency: 'BRL' }}</small>
+            <small>NCM {{ product.fiscalNcm }} · CFOP {{ product.fiscalCfop }} · {{ product.fiscalCommercialUnit }}</small>
+            <small>{{ product.description || 'Sem descricao adicional.' }}</small>
+            <small>{{ product.materialRequirements.length }} material(is) vinculado(s)</small>
+          </button>
+        } @empty {
+          <p class="empty-state">Nenhum produto cadastrado.</p>
+        }
+      </div>
+    </article>
+  </div>
+</section>

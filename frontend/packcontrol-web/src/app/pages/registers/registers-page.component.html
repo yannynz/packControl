@@ -1,0 +1,151 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Cadastros</p>
+      <h2>Tipos, setores, operacoes e fornecedores</h2>
+    </div>
+
+    <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+  </div>
+
+  <div class="metric-grid">
+    <article class="metric-card">
+      <span>Grupos</span>
+      <strong>{{ overview()?.groups?.length || 0 }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Itens ativos</span>
+      <strong>{{ totalActiveEntries() }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Itens totais</span>
+      <strong>{{ totalEntries() }}</strong>
+    </article>
+  </div>
+
+  @if (message()) {
+    <div class="alert alert-info">{{ message() }}</div>
+  }
+
+  <div class="register-layout">
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Novo item</p>
+          <h3>Inclusao rapida em cadastros mestres</h3>
+        </div>
+      </div>
+
+      <form [formGroup]="createForm" (ngSubmit)="create()" class="form-stack">
+        <label class="form-label">
+          Grupo
+          <select class="form-select" formControlName="groupKey">
+            @for (group of overview()?.groups || []; track group.key) {
+              <option [value]="group.key">{{ group.label }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="form-label">
+          Nome
+          <input class="form-control" formControlName="name" />
+        </label>
+
+        <label class="form-label">
+          Descricao
+          <textarea class="form-control" rows="3" formControlName="description"></textarea>
+        </label>
+
+        <div class="action-row">
+          <button class="btn btn-primary" type="submit" [disabled]="creating()">
+            @if (creating()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Criar item
+          </button>
+        </div>
+      </form>
+    </article>
+
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Edicao rapida</p>
+          <h3>Item selecionado</h3>
+        </div>
+      </div>
+
+      @if (selectedEntry()) {
+        <form [formGroup]="editForm" (ngSubmit)="saveSelected()" class="form-stack">
+          <label class="form-label">
+            Grupo
+            <input class="form-control" formControlName="groupLabel" readonly />
+          </label>
+
+          <label class="form-label">
+            Nome
+            <input class="form-control" formControlName="name" />
+          </label>
+
+          <label class="form-label">
+            Descricao
+            <textarea class="form-control" rows="3" formControlName="description"></textarea>
+          </label>
+
+          <label class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="active" />
+            <span class="form-check-label">Cadastro ativo</span>
+          </label>
+
+          <div class="action-row">
+            <button class="btn btn-primary" type="submit" [disabled]="saving()">
+              @if (saving()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              Salvar alteracoes
+            </button>
+          </div>
+        </form>
+      } @else {
+        <p class="empty-state">Selecione um item para editar.</p>
+      }
+    </article>
+  </div>
+
+  @if (overview(); as overview) {
+    <div class="groups-grid">
+      @for (group of overview.groups; track group.key) {
+        <article class="surface-card">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">Cadastro mestre</p>
+              <h3>{{ group.label }}</h3>
+            </div>
+            <span>{{ group.entries.length }} itens</span>
+          </div>
+
+          <div class="entry-grid">
+            @for (entry of group.entries; track entry.id) {
+              <button
+                class="entry-card"
+                type="button"
+                [class.active]="selectedEntry()?.id === entry.id"
+                [class.inactive]="!entry.active"
+                (click)="selectEntry(entry)">
+                <strong>{{ entry.name }}</strong>
+                <span>{{ entry.description || 'Sem descricao complementar.' }}</span>
+                <small>{{ entry.active ? 'Ativo' : 'Inativo' }} · atualizado em {{ entry.updatedAtUtc | date: 'dd/MM HH:mm' }}</small>
+              </button>
+            } @empty {
+              <p class="empty-state">Nenhum item neste grupo.</p>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  } @else if (loading()) {
+    <article class="surface-card">
+      <p class="empty-state">Carregando cadastros...</p>
+    </article>
+  }
+</section>

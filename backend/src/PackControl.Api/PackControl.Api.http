@@ -1,0 +1,246 @@
+@PackControl.Api_HostAddress = http://localhost:5010
+@assetCustomerId = 00000000-0000-0000-0000-000000000000
+@fiscalCompanyProfileId = 00000000-0000-0000-0000-000000000000
+@fiscalDocumentId = 00000000-0000-0000-0000-000000000000
+@fiscalTemplateId = 00000000-0000-0000-0000-000000000000
+@financeEntryId = 00000000-0000-0000-0000-000000000000
+@productionOrderId = 00000000-0000-0000-0000-000000000000
+@mergeProductionOrderId1 = 00000000-0000-0000-0000-000000000000
+@mergeProductionOrderId2 = 00000000-0000-0000-0000-000000000000
+
+### Health
+GET {{PackControl.Api_HostAddress}}/health
+Accept: application/json
+
+### Health Live
+GET {{PackControl.Api_HostAddress}}/health/live
+Accept: application/json
+
+### Health Ready
+GET {{PackControl.Api_HostAddress}}/health/ready
+Accept: application/json
+
+### Login
+POST {{PackControl.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@packcontrol.local",
+  "password": "PackControl!123"
+}
+
+### Customers
+GET {{PackControl.Api_HostAddress}}/api/customers
+Accept: application/json
+
+### Assets
+GET {{PackControl.Api_HostAddress}}/api/assets
+Accept: application/json
+
+### Create Asset
+POST {{PackControl.Api_HostAddress}}/api/assets
+Content-Type: application/json
+
+{
+  "customerId": "{{assetCustomerId}}",
+  "code": "ATV-0001",
+  "alias": "Faca caixa padrao",
+  "assetType": "Faca completa",
+  "status": "Ativo",
+  "revision": "R03",
+  "components": ["Lamina principal", "Base"],
+  "materials": ["Aco 2mm", "Borracha preta"],
+  "lastOrderNumber": "PED-20260326-001",
+  "notes": "Ativo tecnico reaproveitavel."
+}
+
+### Carriers
+GET {{PackControl.Api_HostAddress}}/api/carriers
+Accept: application/json
+
+### Products
+GET {{PackControl.Api_HostAddress}}/api/products
+Accept: application/json
+
+### Registers Overview
+GET {{PackControl.Api_HostAddress}}/api/registers/overview
+Accept: application/json
+
+### Production Overview
+GET {{PackControl.Api_HostAddress}}/api/production/overview
+Accept: application/json
+
+### Production Sector - Montagem
+GET {{PackControl.Api_HostAddress}}/api/production/sectors/Montagem
+Accept: application/json
+
+### Split Production Order
+POST {{PackControl.Api_HostAddress}}/api/production/orders/{{productionOrderId}}/split
+Content-Type: application/json
+
+{
+  "reason": "Separacao por componente",
+  "parts": [
+    {
+      "title": "Corpo principal",
+      "quantity": 3,
+      "sector": "Montagem"
+    },
+    {
+      "title": "Complemento",
+      "quantity": 2,
+      "sector": "Emborrachamento"
+    }
+  ]
+}
+
+### Merge Production Orders
+POST {{PackControl.Api_HostAddress}}/api/production/orders/merge
+Content-Type: application/json
+
+{
+  "productionOrderIds": [
+    "{{mergeProductionOrderId1}}",
+    "{{mergeProductionOrderId2}}"
+  ],
+  "title": "OP reunificada",
+  "sector": "Montagem",
+  "reason": "Cliente voltou ao escopo original"
+}
+
+### Finance Overview
+GET {{PackControl.Api_HostAddress}}/api/finance/overview
+Accept: application/json
+
+### Fiscal Overview
+GET {{PackControl.Api_HostAddress}}/api/fiscal/overview
+Accept: application/json
+
+### Fiscal Engine Diagnostic
+GET {{PackControl.Api_HostAddress}}/api/fiscal/engine-diagnostic?companyProfileId={{fiscalCompanyProfileId}}
+Accept: application/json
+
+### Create Finance Entry
+POST {{PackControl.Api_HostAddress}}/api/finance/entries
+Content-Type: application/json
+
+{
+  "orderId": null,
+  "orderNumber": null,
+  "type": "Receber",
+  "description": "Titulo manual de teste",
+  "counterparty": "Cliente demonstracao",
+  "amount": 1250.50,
+  "dueAtUtc": "2026-04-10T12:00:00Z",
+  "paymentMethod": "Boleto",
+  "notes": "Lancamento manual",
+  "entrySource": "Manual"
+}
+
+### Generate Boleto
+POST {{PackControl.Api_HostAddress}}/api/finance/entries/{{financeEntryId}}/boleto
+Content-Type: application/json
+
+{}
+
+### Issue NF-e
+POST {{PackControl.Api_HostAddress}}/api/finance/invoices/issue
+Content-Type: application/json
+
+{
+  "financeEntryId": "{{financeEntryId}}",
+  "series": "1",
+  "natureOfOperation": "Venda de faca grafica",
+  "cfop": "5102",
+  "notes": "Emitido para homologacao do adaptador fiscal."
+}
+
+### Prepare Canonical Fiscal Document
+POST {{PackControl.Api_HostAddress}}/api/fiscal/documents/prepare
+Content-Type: application/json
+
+{
+  "financeEntryId": "{{financeEntryId}}",
+  "orderId": null,
+  "series": "1",
+  "natureOfOperation": "Venda de faca grafica",
+  "cfop": "5102",
+  "notes": "Documento preparado pela camada fiscal canonica."
+}
+
+### Issue NF-e - Canonical Fiscal Endpoint
+POST {{PackControl.Api_HostAddress}}/api/fiscal/documents/issue
+Content-Type: application/json
+
+{
+  "fiscalDocumentId": "{{fiscalDocumentId}}",
+  "financeEntryId": "{{financeEntryId}}",
+  "orderId": null,
+  "series": "1",
+  "natureOfOperation": "Venda de faca grafica",
+  "cfop": "5102",
+  "notes": "Emitido pela espinha dorsal do modulo fiscal."
+}
+
+### Update Fiscal Company Profile
+PUT {{PackControl.Api_HostAddress}}/api/fiscal/company-profiles/{{fiscalCompanyProfileId}}
+Content-Type: application/json
+
+{
+  "tradeName": "PackControl Facaria Ltda",
+  "documentNumber": "12.345.678/0001-90",
+  "stateRegistration": "123.456.789.000",
+  "taxRegime": "Lucro Presumido",
+  "postalCode": "01311-000",
+  "street": "Avenida Paulista",
+  "streetNumber": "1450",
+  "district": "Bela Vista",
+  "city": "Sao Paulo",
+  "stateCode": "SP",
+  "country": "Brasil",
+  "complement": "Conjunto 2101",
+  "fiscalSeries": "1",
+  "nfeEnabled": true,
+  "environment": "Homologacao",
+  "adapterName": "unimake.dfe",
+  "certificateType": "A1/A3",
+  "certificateMedia": "Arquivo, pendrive ou cartao",
+  "principalEmissionMode": "A1",
+  "contingencyEmissionMode": "A3",
+  "certificateLabel": "Repositorio fiscal principal",
+  "certificateSerialNumber": "SERIAL-DEMO-0001",
+  "accountantValidated": true,
+  "homologationCredentialsValidated": true,
+  "homologationApproved": true,
+  "productionCredentialsValidated": false,
+  "productionApproved": false,
+  "onboardingNotes": "Emitente pronto para homologacao em Sao Paulo/SP."
+}
+
+### Create Fiscal Operation Template
+POST {{PackControl.Api_HostAddress}}/api/fiscal/operation-templates
+Content-Type: application/json
+
+{
+  "companyProfileId": "{{fiscalCompanyProfileId}}",
+  "name": "Venda padrao de facaria",
+  "natureOfOperation": "Venda de produto",
+  "cfop": "5101",
+  "finality": "Normal",
+  "active": true,
+  "notes": "Template padrao da empresa."
+}
+
+### Update Fiscal Operation Template
+PUT {{PackControl.Api_HostAddress}}/api/fiscal/operation-templates/{{fiscalTemplateId}}
+Content-Type: application/json
+
+{
+  "companyProfileId": "{{fiscalCompanyProfileId}}",
+  "name": "Venda interestadual de faca",
+  "natureOfOperation": "Venda interestadual de faca grafica",
+  "cfop": "6101",
+  "finality": "Normal",
+  "active": true,
+  "notes": "Template ajustado via API."
+}

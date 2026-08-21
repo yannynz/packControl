@@ -1,0 +1,88 @@
+.products-layout {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(24rem, 34rem) minmax(0, 1fr);
+}
+
+.form-stack,
+.product-grid,
+.requirements-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.dual-grid,
+.quad-grid,
+.triple-grid,
+.requirement-row,
+.requirements-head,
+.product-top,
+.action-row {
+  display: grid;
+  gap: 1rem;
+}
+
+.dual-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.triple-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.quad-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.requirement-row {
+  grid-template-columns: minmax(0, 1fr) 8rem 8rem;
+}
+
+.requirements-head,
+.product-top,
+.action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.requirement-card,
+.product-card {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(24, 39, 75, 0.12);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.92);
+  text-align: left;
+}
+
+.product-card.active {
+  border-color: rgba(13, 110, 253, 0.45);
+  transform: translateY(-2px);
+}
+
+.qty,
+.unit {
+  max-width: 8rem;
+}
+
+@media (max-width: 1240px) {
+  .products-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 840px) {
+  .dual-grid,
+  .quad-grid,
+  .triple-grid,
+  .requirement-row {
+    grid-template-columns: 1fr;
+  }
+
+  .qty,
+  .unit {
+    max-width: none;
+  }
+}

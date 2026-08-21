@@ -1,0 +1,48 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Pedidos</p>
+      <h2>Fila comercial e tecnica</h2>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+      <a class="btn btn-primary" routerLink="/pedidos/novo">Novo pedido</a>
+    </div>
+  </div>
+
+  <div class="table-shell">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Pedido</th>
+          <th>Cliente</th>
+          <th>Status</th>
+          <th>Escopo</th>
+          <th>Anexos</th>
+          <th>Criado em</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (order of orders(); track order.id) {
+          <tr class="clickable-row" [routerLink]="['/pedidos', order.id]">
+            <td>
+              <strong>{{ order.number }}</strong>
+              <div class="mini">{{ formatServiceType(order.serviceType) }} / {{ formatUrgency(order.urgency) }}</div>
+              <div class="mini">{{ order.scopePreview }}</div>
+            </td>
+            <td>{{ order.customerName }}</td>
+            <td><span class="chip">{{ formatStatus(order.status) }}</span></td>
+            <td>{{ order.scopeItemsCount }}</td>
+            <td>{{ order.attachmentsCount }}</td>
+            <td>{{ order.createdAtUtc | date: 'dd/MM/yyyy HH:mm' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="empty-state">Nenhum pedido encontrado.</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

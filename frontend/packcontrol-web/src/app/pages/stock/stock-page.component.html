@@ -1,0 +1,55 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Estoque</p>
+      <h2>Saldos, reserva e reposicao</h2>
+    </div>
+
+    <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+  </div>
+
+  <div class="stock-grid">
+    @for (item of stockItems(); track item.id) {
+      <article class="surface-card stock-card" [class.critical]="item.status === 'Critico'">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">{{ item.status }}</p>
+            <h3>{{ item.materialName }}</h3>
+          </div>
+          <span class="chip">{{ item.available }} disponivel</span>
+        </div>
+
+        <div class="stock-metrics">
+          <div>
+            <small>Saldo</small>
+            <strong>{{ item.onHand }}</strong>
+          </div>
+          <div>
+            <small>Reservado</small>
+            <strong>{{ item.reserved }}</strong>
+          </div>
+          <div>
+            <small>Reposicao</small>
+            <strong>{{ item.reorderPoint }}</strong>
+          </div>
+        </div>
+
+        <span class="muted">{{ item.lastMovement }}</span>
+        <small class="muted">Ultima movimentacao em {{ item.lastMovementAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+
+        <div class="action-row">
+          <button class="btn btn-outline-primary" type="button" [disabled]="actingId() === item.id" (click)="reserve(item)">
+            Reservar 1
+          </button>
+          <button class="btn btn-primary" type="button" [disabled]="actingId() === item.id" (click)="replenish(item)">
+            Repor 5
+          </button>
+        </div>
+      </article>
+    } @empty {
+      <article class="surface-card">
+        <p class="empty-state">Nenhum item de estoque encontrado.</p>
+      </article>
+    }
+  </div>
+</section>

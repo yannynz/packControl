@@ -1,0 +1,128 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Ativos tecnicos</p>
+      <h2>Facas, conjuntos e historico do cliente</h2>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+      <button class="btn btn-primary" type="button" (click)="startCreate()">Novo ativo</button>
+    </div>
+  </div>
+
+  @if (message()) {
+    <div class="alert alert-info">{{ message() }}</div>
+  }
+
+  <div class="metric-grid">
+    <article class="metric-card">
+      <span>Total de ativos</span>
+      <strong>{{ assets().length }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Ativos em uso</span>
+      <strong>{{ activeAssets() }}</strong>
+    </article>
+  </div>
+
+  <div class="page-grid">
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Cadastro</p>
+          <h3>{{ selectedAsset() ? 'Editar ativo tecnico' : 'Novo ativo tecnico' }}</h3>
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="form-stack">
+        <label class="form-label">
+          Cliente
+          <select class="form-select" formControlName="customerId">
+            @for (customer of customers(); track customer.id) {
+              <option [value]="customer.id">{{ customer.name }}</option>
+            }
+          </select>
+        </label>
+
+        <div class="dual-grid">
+          <label class="form-label">
+            Codigo do ativo
+            <input class="form-control" formControlName="code" />
+          </label>
+          <label class="form-label">
+            Apelido
+            <input class="form-control" formControlName="alias" />
+          </label>
+        </div>
+
+        <div class="triple-grid">
+          <label class="form-label">
+            Tipo
+            <input class="form-control" formControlName="assetType" />
+          </label>
+          <label class="form-label">
+            Status
+            <input class="form-control" formControlName="status" />
+          </label>
+          <label class="form-label">
+            Revisao
+            <input class="form-control" formControlName="revision" />
+          </label>
+        </div>
+
+        <label class="form-label">
+          Componentes
+          <input class="form-control" formControlName="componentsText" placeholder="Quadro, aco, destacador" />
+        </label>
+
+        <label class="form-label">
+          Materiais
+          <input class="form-control" formControlName="materialsText" placeholder="Aco 2mm, borracha 60 shore" />
+        </label>
+
+        <label class="form-label">
+          Ultimo pedido relacionado
+          <input class="form-control" formControlName="lastOrderNumber" />
+        </label>
+
+        <label class="form-label">
+          Observacoes tecnicas
+          <textarea class="form-control" rows="4" formControlName="notes"></textarea>
+        </label>
+
+        <div class="action-row">
+          <button class="btn btn-primary" type="submit" [disabled]="saving()">
+            @if (saving()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            Salvar ativo
+          </button>
+        </div>
+      </form>
+    </article>
+
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Base ativa</p>
+          <h3>Ativos cadastrados</h3>
+        </div>
+      </div>
+
+      <div class="list-grid">
+        @for (asset of assets(); track asset.id) {
+          <button class="soft-card asset-card" type="button" (click)="selectAsset(asset)">
+            <strong>{{ asset.code }} · {{ asset.alias }}</strong>
+            <span>{{ asset.customerName }} · {{ asset.assetType }}</span>
+            <small>{{ asset.status }} · {{ asset.revision }} · atualizacao {{ asset.updatedAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+            <small>Materiais: {{ asset.materials.join(', ') || 'nao informados' }}</small>
+            <small>Componentes: {{ asset.components.join(', ') || 'nao informados' }}</small>
+          </button>
+        } @empty {
+          <p class="empty-state">Nenhum ativo tecnico cadastrado.</p>
+        }
+      </div>
+    </article>
+  </div>
+</section>

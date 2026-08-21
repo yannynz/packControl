@@ -1,0 +1,60 @@
+<div class="login-shell">
+  <section class="hero-panel">
+    <p class="eyebrow">MVP operacional</p>
+    <h1>PackControl nasce pelo fluxo operacional, nao por um painel generico.</h1>
+    <p>
+      Esta base ja conecta autenticacao, clientes, pedidos, anexos e a espera estruturada
+      pelos motores reais de PDF e DXF.
+    </p>
+
+    <div class="hero-grid">
+      <article>
+        <strong>Pedido flexivel</strong>
+        <span>novo, repeticao, manutencao, reforma e adaptacao</span>
+      </article>
+      <article>
+        <strong>Anexo com hash</strong>
+        <span>persistencia local e analise tecnica provisoria para PDF/DXF</span>
+      </article>
+      <article>
+        <strong>Arquitetura modular</strong>
+        <span>Angular + ASP.NET Core + contratos com edge</span>
+      </article>
+    </div>
+  </section>
+
+  <section class="login-card">
+    <p class="eyebrow">Acesso local</p>
+    <h2>Entrar</h2>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="vstack gap-3">
+      <label class="form-label">
+        E-mail
+        <input class="form-control" type="email" formControlName="email" />
+      </label>
+
+      <label class="form-label">
+        Senha
+        <input class="form-control" type="password" formControlName="password" />
+      </label>
+
+      <div class="seed-hint">
+        Seed local pronto:
+        <strong>admin@packcontrol.local</strong>
+        /
+        <strong>PackControl!123</strong>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="alert alert-danger mb-0">{{ errorMessage() }}</div>
+      }
+
+      <button class="btn btn-primary btn-lg" [disabled]="loading()" type="submit">
+        @if (loading()) {
+          <span class="spinner-border spinner-border-sm me-2"></span>
+        }
+        Entrar no ERP
+      </button>
+    </form>
+  </section>
+</div>

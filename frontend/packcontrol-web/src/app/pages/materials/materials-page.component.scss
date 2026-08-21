@@ -1,0 +1,26 @@
+.material-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.material-card {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.compact {
+  margin-bottom: 0.3rem;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(18, 35, 61, 0.08);
+}
+
+.info-row span {
+  color: var(--pc-muted);
+}

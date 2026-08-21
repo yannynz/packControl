@@ -1,0 +1,167 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Setor dedicado</p>
+      <h2>{{ detail()?.name || sectorKey }}</h2>
+    </div>
+
+    <div class="action-row">
+      <a class="btn btn-outline-primary" routerLink="/producao">Voltar para producao</a>
+      <button class="btn btn-primary" type="button" (click)="reload()">Atualizar fila</button>
+    </div>
+  </div>
+
+  @if (detail(); as detail) {
+    <div class="metric-grid">
+      <article class="metric-card">
+        <span>Responsavel padrao</span>
+        <strong>{{ detail.defaultOwner }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Em fila</span>
+        <strong>{{ detail.pending }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Em producao</span>
+        <strong>{{ detail.inProgress }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Atrasadas</span>
+        <strong>{{ detail.late }}</strong>
+      </article>
+    </div>
+
+    <article class="surface-card merge-panel">
+      <div class="card-head">
+        <div>
+          <p class="eyebrow">Split / merge</p>
+          <h3>Reorganizar OPs do setor</h3>
+        </div>
+        <span class="chip">{{ selectedForMerge().length }} selecionada(s)</span>
+      </div>
+
+      <form [formGroup]="mergeForm" class="merge-form">
+        <label class="form-label">
+          Titulo da OP mesclada
+          <input class="form-control" formControlName="title" placeholder="Opcional: manter titulo automatico" />
+        </label>
+        <label class="form-label">
+          Setor de destino
+          <input class="form-control" formControlName="sector" />
+        </label>
+        <label class="form-label grow">
+          Motivo
+          <input class="form-control" formControlName="reason" placeholder="Ex.: reagrupar para montagem final" />
+        </label>
+        <button class="btn btn-primary" type="button" [disabled]="selectedForMerge().length < 2 || actingStructure()" (click)="mergeSelected()">
+          Mesclar selecionadas
+        </button>
+      </form>
+    </article>
+
+    <div class="sector-grid">
+      @for (item of detail.orders; track item.id) {
+        <article class="surface-card order-card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">{{ item.orderNumber }}</p>
+              <h3>{{ item.number }}</h3>
+            </div>
+            <span class="chip">{{ item.status }}</span>
+          </div>
+
+          <label class="merge-check">
+            <input
+              type="checkbox"
+              [checked]="isSelectedForMerge(item.id)"
+              [disabled]="item.status === 'Em producao' || actingStructure()"
+              (change)="toggleMerge(item.id, $any($event.target).checked)" />
+            Selecionar para merge
+          </label>
+
+          <strong>{{ item.title }}</strong>
+          <span class="muted">{{ item.productName || 'Produto avulso' }} · {{ item.quantity }} un.</span>
+          <span class="muted">{{ item.customerName }}</span>
+          <small class="muted">{{ item.billingMethod }} @ {{ item.unitPrice || 0 | currency: 'BRL' }}</small>
+          <small class="muted">Apoio material: {{ item.materialSupport }}</small>
+          <small class="muted">Prazo {{ item.dueAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+          @if (item.parentProductionOrderNumber || item.relatedProductionOrderNumbers.length || item.traceabilityReason) {
+            <small class="muted">
+              @if (item.parentProductionOrderNumber) {
+                Split de {{ item.parentProductionOrderNumber }}
+              } @else if (item.relatedProductionOrderNumbers.length) {
+                Merge de {{ item.relatedProductionOrderNumbers.join(', ') }}
+              }
+              @if (item.traceabilityReason) {
+                · {{ item.traceabilityReason }}
+              }
+            </small>
+          }
+
+          <div class="action-row">
+            <a class="btn btn-outline-primary" [routerLink]="['/pedidos', item.orderId]">Abrir pedido</a>
+            @if (canSplit(item)) {
+              <button class="btn btn-outline-primary" type="button" [disabled]="actingStructure()" (click)="startSplit(item)">
+                Split
+              </button>
+            }
+            <button class="btn btn-primary" type="button" [disabled]="advancingId() === item.id" (click)="advance(item.id)">
+              @if (advancingId() === item.id) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              Avancar
+            </button>
+          </div>
+
+          @if (splittingId() === item.id) {
+            <form [formGroup]="splitForm" class="split-box">
+              <div class="split-grid">
+                <label class="form-label">
+                  Parte 1
+                  <input class="form-control" type="number" formControlName="firstQuantity" />
+                </label>
+                <label class="form-label">
+                  Parte 2
+                  <input class="form-control" type="number" formControlName="secondQuantity" />
+                </label>
+                <label class="form-label">
+                  Setor da parte 2
+                  <input class="form-control" formControlName="secondSector" />
+                </label>
+              </div>
+
+              <label class="form-label">
+                Titulo da parte 2
+                <input class="form-control" formControlName="secondTitle" />
+              </label>
+
+              <label class="form-label">
+                Motivo
+                <input class="form-control" formControlName="reason" />
+              </label>
+
+              @if (splitForm.controls.secondQuantity.errors?.['quantityMismatch']) {
+                <small class="text-danger">A soma das partes precisa fechar a quantidade original.</small>
+              }
+
+              <div class="action-row">
+                <button class="btn btn-outline-primary" type="button" (click)="cancelSplit()">Cancelar</button>
+                <button class="btn btn-primary" type="button" [disabled]="actingStructure()" (click)="submitSplit(item)">
+                  Confirmar split
+                </button>
+              </div>
+            </form>
+          }
+        </article>
+      } @empty {
+        <article class="surface-card">
+          <p class="empty-state">Nenhuma OP nesta fila.</p>
+        </article>
+      }
+    </div>
+  } @else if (loading()) {
+    <article class="surface-card">
+      <p class="empty-state">Carregando fila do setor...</p>
+    </article>
+  }
+</section>

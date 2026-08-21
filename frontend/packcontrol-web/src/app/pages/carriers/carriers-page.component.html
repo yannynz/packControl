@@ -1,0 +1,139 @@
+<section class="page-section">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">Transportadoras</p>
+      <h2>Padroes de coleta, entrega e contato</h2>
+    </div>
+
+    <div class="action-row">
+      <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+      <button class="btn btn-primary" type="button" (click)="newCarrier()">Nova transportadora</button>
+    </div>
+  </div>
+
+  <div class="metric-grid">
+    <article class="metric-card">
+      <span>Total</span>
+      <strong>{{ carriers().length }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Entregam</span>
+      <strong>{{ activeDeliveries() }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>Retirada/coleta</span>
+      <strong>{{ pickupEnabled() }}</strong>
+    </article>
+  </div>
+
+  @if (message()) {
+    <div class="alert alert-info">{{ message() }}</div>
+  }
+
+  <div class="carrier-layout">
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">{{ selectedCarrier() ? 'Edicao' : 'Nova transportadora' }}</p>
+          <h3>{{ selectedCarrier()?.name || 'Cadastro logistico' }}</h3>
+        </div>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="save()" class="form-stack">
+        <div class="dual-grid">
+          <label class="form-label">
+            Nome
+            <input class="form-control" formControlName="name" />
+          </label>
+          <label class="form-label">
+            Responsavel
+            <input class="form-control" formControlName="contactName" />
+          </label>
+        </div>
+
+        <div class="dual-grid">
+          <label class="form-label">
+            E-mail
+            <input class="form-control" formControlName="email" />
+          </label>
+          <label class="form-label">
+            Telefone
+            <input class="form-control" formControlName="phone" />
+          </label>
+        </div>
+
+        <div class="dual-grid">
+          <label class="form-label">
+            Area atendida
+            <input class="form-control" formControlName="serviceArea" />
+          </label>
+          <label class="form-label">
+            Horario de funcionamento
+            <input class="form-control" formControlName="businessHours" />
+          </label>
+        </div>
+
+        <label class="form-label">
+          Modal padrao
+          <select class="form-select" formControlName="defaultMode">
+            @for (mode of modes; track mode) {
+              <option [value]="mode">{{ mode }}</option>
+            }
+          </select>
+        </label>
+
+        <div class="check-grid">
+          <label class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="doesPickup" />
+            <span class="form-check-label">Realiza coleta/retirada</span>
+          </label>
+          <label class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="doesDelivery" />
+            <span class="form-check-label">Realiza entrega</span>
+          </label>
+        </div>
+
+        <label class="form-label">
+          Padrao de trabalho
+          <textarea class="form-control" rows="3" formControlName="notes"></textarea>
+        </label>
+
+        <div class="action-row">
+          <button class="btn btn-primary" type="submit" [disabled]="saving()">
+            @if (saving()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            }
+            {{ selectedCarrier() ? 'Salvar transportadora' : 'Criar transportadora' }}
+          </button>
+        </div>
+      </form>
+    </article>
+
+    <article class="surface-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="eyebrow">Base atual</p>
+          <h3>Operadores logisticos</h3>
+        </div>
+      </div>
+
+      <div class="carrier-grid">
+        @for (carrier of carriers(); track carrier.id) {
+          <button class="carrier-card" type="button" [class.active]="selectedCarrierId() === carrier.id" (click)="selectCarrier(carrier)">
+            <div class="carrier-top">
+              <strong>{{ carrier.name }}</strong>
+              <span class="chip">{{ carrier.defaultMode }}</span>
+            </div>
+            <small>{{ carrier.contactName }} · {{ carrier.phone || 'Sem telefone' }}</small>
+            <small>{{ carrier.email || 'Sem e-mail' }}</small>
+            <small>{{ carrier.businessHours }}</small>
+            <small>{{ carrier.serviceArea }}</small>
+            <small>{{ carrier.doesPickup ? 'Coleta' : 'Sem coleta' }} · {{ carrier.doesDelivery ? 'Entrega' : 'Sem entrega' }}</small>
+          </button>
+        } @empty {
+          <p class="empty-state">Nenhuma transportadora cadastrada.</p>
+        }
+      </div>
+    </article>
+  </div>
+</section>

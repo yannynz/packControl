@@ -1,0 +1,37 @@
+.page-section {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.table-shell {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(18, 35, 61, 0.08);
+  border-radius: 1.4rem;
+  box-shadow: 0 18px 38px rgba(31, 51, 84, 0.08);
+}
+
+.mini {
+  color: var(--pc-muted);
+  font-size: 0.85rem;
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+.clickable-row:hover {
+  background: rgba(37, 99, 235, 0.04);
+}

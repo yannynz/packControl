@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PACKCONTROL_DB_NAME}
+      POSTGRES_USER: ${PACKCONTROL_DB_USER}
+      POSTGRES_PASSWORD: ${PACKCONTROL_DB_PASSWORD}
+    volumes:
+      - packcontrol-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PACKCONTROL_DB_USER} -d ${PACKCONTROL_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      FileStorage__RootPath: /var/lib/packcontrol/storage
+      StatePersistence__Provider: PostgreSQL
+      StatePersistence__ConnectionString: Host=postgres;Port=5432;Database=${PACKCONTROL_DB_NAME};Username=${PACKCONTROL_DB_USER};Password=${PACKCONTROL_DB_PASSWORD}
+      Cors__AllowedOrigins__0: ${PACKCONTROL_WEB_ORIGIN}
+      FiscalEngines__Unimake__AllowRealEmission: ${PACKCONTROL_FISCAL_ALLOW_REAL_EMISSION}
+      FiscalEngines__Unimake__CertificatePath: ${PACKCONTROL_FISCAL_CERTIFICATE_PATH}
+      FiscalEngines__Unimake__CertificatePassword: ${PACKCONTROL_FISCAL_CERTIFICATE_PASSWORD}
+    volumes:
+      - packcontrol-storage:/var/lib/packcontrol/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/health/ready >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/frontend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${PACKCONTROL_WEB_PORT}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  packcontrol-postgres:
+  packcontrol-storage:

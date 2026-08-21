@@ -1,0 +1,387 @@
+<section class="page-section">
+    <div class="section-heading">
+      <div>
+        <p class="eyebrow">Financeiro</p>
+        <h2>Receber, pagar, boletos e NF-e</h2>
+      </div>
+
+    <button class="btn btn-outline-primary" type="button" (click)="reload()">Atualizar</button>
+  </div>
+
+  @if (overview(); as overview) {
+    <div class="metric-grid">
+      <article class="metric-card">
+        <span>Receber em aberto</span>
+        <strong>{{ overview.openReceivablesTotal | currency: 'BRL' }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Pagar em aberto</span>
+        <strong>{{ overview.openPayablesTotal | currency: 'BRL' }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Vencido</span>
+        <strong>{{ overview.overdueTotal | currency: 'BRL' }}</strong>
+      </article>
+      <article class="metric-card">
+        <span>Notas emitidas</span>
+        <strong>{{ overview.invoices.length }}</strong>
+      </article>
+    </div>
+
+    @if (message()) {
+      <div class="alert alert-info">{{ message() }}</div>
+    }
+
+    <div class="finance-layout">
+      <article class="surface-card">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Novo lancamento</p>
+            <h3>Contas a receber e a pagar</h3>
+          </div>
+        </div>
+
+        <form [formGroup]="createForm" (ngSubmit)="createEntry()" class="form-stack">
+          <label class="form-label">
+            Pedido vinculado
+            <select class="form-select" formControlName="orderId">
+              <option value="">Sem vinculo</option>
+              @for (order of orders(); track order.id) {
+                <option [value]="order.id">{{ order.number }} · {{ order.customerName }}</option>
+              }
+            </select>
+          </label>
+
+          <div class="triple-grid">
+            <label class="form-label">
+              Tipo
+              <select class="form-select" formControlName="type">
+                @for (type of entryTypes; track type) {
+                  <option [value]="type">{{ type }}</option>
+                }
+              </select>
+            </label>
+            <label class="form-label">
+              Origem
+              <select class="form-select" formControlName="entrySource">
+                @for (source of entrySources; track source) {
+                  <option [value]="source">{{ source }}</option>
+                }
+              </select>
+            </label>
+            <label class="form-label">
+              Forma de cobranca/pagamento
+              <select class="form-select" formControlName="paymentMethod">
+                @for (method of paymentMethods; track method) {
+                  <option [value]="method">{{ method }}</option>
+                }
+              </select>
+            </label>
+          </div>
+
+          <label class="form-label">
+            Descricao
+            <input class="form-control" formControlName="description" />
+          </label>
+
+          <div class="dual-grid">
+            <label class="form-label">
+              Contraparte
+              <input class="form-control" formControlName="counterparty" />
+            </label>
+            <label class="form-label">
+              Vencimento
+              <input class="form-control" type="date" formControlName="dueDate" />
+            </label>
+          </div>
+
+          <label class="form-label">
+            Valor
+            <input class="form-control" type="number" formControlName="amount" />
+          </label>
+
+          <label class="form-label">
+            Observacoes
+            <textarea class="form-control" rows="3" formControlName="notes"></textarea>
+          </label>
+
+          <div class="action-row">
+            <button class="btn btn-primary" type="submit" [disabled]="saving()">
+              @if (saving()) {
+                <span class="spinner-border spinner-border-sm me-2"></span>
+              }
+              Criar lancamento
+            </button>
+          </div>
+        </form>
+      </article>
+
+      <article class="surface-card">
+        <div class="section-heading compact">
+          <div>
+            <p class="eyebrow">Fiscal</p>
+            <h3>Prepare e emita pela camada canonica</h3>
+          </div>
+        </div>
+
+        <form [formGroup]="invoiceForm" (ngSubmit)="issueInvoice()" class="form-stack">
+          <label class="form-label">
+            Documento preparado
+            <select class="form-select" formControlName="fiscalDocumentId">
+              <option value="">Preparar novo documento ou emitir pelo titulo</option>
+              @for (document of preparedDocuments(); track document.id) {
+                <option [value]="document.id">
+                  {{ document.number || 'Sem numero' }} · {{ document.recipientName }} · {{ document.amount | currency: 'BRL' }}
+                </option>
+              }
+            </select>
+          </label>
+
+          <label class="form-label">
+            Titulo para faturar
+            <select class="form-select" formControlName="financeEntryId">
+              <option value="">Sem titulo especifico</option>
+              @for (entry of receivableEntries(); track entry.id) {
+                <option [value]="entry.id">{{ entry.orderNumber || 'Avulso' }} · {{ entry.counterparty }} · {{ entry.amount | currency: 'BRL' }}</option>
+              }
+            </select>
+          </label>
+
+          <div class="dual-grid">
+            <label class="form-label">
+              Serie
+              <input class="form-control" formControlName="series" />
+            </label>
+            <label class="form-label">
+              Natureza da operacao
+              <input class="form-control" formControlName="natureOfOperation" />
+            </label>
+          </div>
+
+          <div class="dual-grid">
+            <label class="form-label">
+              CFOP
+              <input class="form-control" formControlName="cfop" />
+            </label>
+            <label class="form-label">
+              Observacoes
+              <input class="form-control" formControlName="notes" />
+            </label>
+          </div>
+
+          <div class="action-row">
+            <button class="btn btn-outline-primary" type="button" [disabled]="saving()" (click)="prepareInvoice()">
+              Preparar documento
+            </button>
+            <button class="btn btn-primary" type="submit" [disabled]="saving()">Emitir NF-e</button>
+          </div>
+        </form>
+
+        <div class="event-grid">
+          <form [formGroup]="cancelForm" (ngSubmit)="cancelDocument()" class="mini-card form-stack">
+            <div>
+              <p class="eyebrow">Evento fiscal</p>
+              <h4>Cancelamento</h4>
+            </div>
+
+            <label class="form-label">
+              Documento autorizado
+              <select class="form-select" formControlName="fiscalDocumentId">
+                <option value="">Selecione um documento autorizado</option>
+                @for (document of authorizedDocuments(); track document.id) {
+                  <option [value]="document.id">
+                    {{ document.number || 'Sem numero' }} · {{ document.recipientName }} · {{ document.amount | currency: 'BRL' }}
+                  </option>
+                }
+              </select>
+            </label>
+
+            <label class="form-label">
+              Justificativa
+              <textarea class="form-control" rows="3" formControlName="reason"></textarea>
+            </label>
+
+            <div class="action-row">
+              <button class="btn btn-outline-danger" type="submit" [disabled]="saving()">Cancelar NF-e</button>
+            </div>
+          </form>
+
+          <form [formGroup]="correctionForm" (ngSubmit)="applyCorrectionLetter()" class="mini-card form-stack">
+            <div>
+              <p class="eyebrow">Evento fiscal</p>
+              <h4>Carta de correcao</h4>
+            </div>
+
+            <label class="form-label">
+              Documento autorizado
+              <select class="form-select" formControlName="fiscalDocumentId">
+                <option value="">Selecione um documento autorizado</option>
+                @for (document of authorizedDocuments(); track document.id) {
+                  <option [value]="document.id">
+                    {{ document.number || 'Sem numero' }} · {{ document.recipientName }} · {{ document.amount | currency: 'BRL' }}
+                  </option>
+                }
+              </select>
+            </label>
+
+            <label class="form-label">
+              Texto da correcao
+              <textarea class="form-control" rows="3" formControlName="correctionText"></textarea>
+            </label>
+
+            <div class="action-row">
+              <button class="btn btn-outline-primary" type="submit" [disabled]="saving()">Registrar CC-e</button>
+            </div>
+          </form>
+        </div>
+
+        <form [formGroup]="inutilizationForm" (ngSubmit)="inutilizeNumberRange()" class="mini-card form-stack">
+          <div>
+            <p class="eyebrow">Numeracao fiscal</p>
+            <h4>Inutilizacao de faixa</h4>
+          </div>
+
+          <div class="triple-grid">
+            <label class="form-label">
+              Serie
+              <input class="form-control" formControlName="series" />
+            </label>
+            <label class="form-label">
+              Numero inicial
+              <input class="form-control" type="number" formControlName="startNumber" />
+            </label>
+            <label class="form-label">
+              Numero final
+              <input class="form-control" type="number" formControlName="endNumber" />
+            </label>
+          </div>
+
+          <label class="form-label">
+            Justificativa
+            <textarea class="form-control" rows="3" formControlName="reason"></textarea>
+          </label>
+
+          <div class="action-row">
+            <button class="btn btn-outline-primary" type="submit" [disabled]="saving()">Inutilizar faixa</button>
+          </div>
+        </form>
+
+        @if (fiscalOverview(); as fiscalOverview) {
+          <div class="document-list">
+            @for (document of fiscalOverview.documents; track document.id) {
+              <button class="document-card" type="button" (click)="useDocument(document)">
+                <strong>{{ document.number || 'Rascunho' }} / serie {{ document.series }}</strong>
+                <span>{{ document.recipientName }} · {{ document.amount | currency: 'BRL' }}</span>
+                <small>{{ document.status }} · {{ document.issueMode }} · tentativas {{ document.attemptsCount }}</small>
+                <small>{{ document.natureOfOperation }} · CFOP {{ document.cfop }}</small>
+                @if (document.lastError) {
+                  <small>Ultimo erro: {{ document.lastError }}</small>
+                }
+                @if (document.events.length > 0) {
+                  <div class="sublist">
+                    @for (event of document.events | slice:0:2; track event.id) {
+                      <small>{{ formatEventType(event.eventType) }} · {{ event.occurredAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+                    }
+                  </div>
+                }
+                @if (document.artifacts.length > 0) {
+                  <div class="sublist">
+                    @for (artifact of document.artifacts | slice:0:2; track artifact.id) {
+                      <small>{{ artifact.kind }} · {{ artifact.storagePath }}</small>
+                    }
+                  </div>
+                }
+              </button>
+            } @empty {
+              <p class="empty-state">Nenhum documento fiscal preparado ainda.</p>
+            }
+          </div>
+        }
+
+        <div class="invoice-list">
+          @for (invoice of overview.invoices; track invoice.id) {
+            <div class="mini-card">
+              <strong>{{ invoice.number }} / serie {{ invoice.series }}</strong>
+              <span>{{ invoice.customerName }} · {{ invoice.amount | currency: 'BRL' }}</span>
+              <small>{{ invoice.status }} · {{ invoice.environment }} · {{ invoice.issuedAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+              <small>Chave {{ invoice.accessKey }} · protocolo {{ invoice.protocol }}</small>
+              <small>{{ invoice.engineName }} · {{ invoice.certificateType }} / {{ invoice.certificateMedia }}</small>
+              <small>{{ invoice.natureOfOperation }} · CFOP {{ invoice.cfop }}</small>
+            </div>
+          } @empty {
+            <p class="empty-state">Nenhuma NF-e emitida ainda.</p>
+          }
+        </div>
+
+        @if (fiscalOverview(); as fiscalOverview) {
+          @if (fiscalOverview.numberingEvents.length > 0) {
+            <div class="invoice-list">
+              @for (event of fiscalOverview.numberingEvents; track event.id) {
+                <div class="mini-card">
+                  <strong>Inutilizacao {{ event.series }}/{{ event.startNumber }}-{{ event.endNumber }}</strong>
+                  <span>{{ event.status }} · {{ event.environment }} · protocolo {{ event.protocol }}</span>
+                  <small>{{ event.reason }}</small>
+                  <small>{{ event.adapterName }} · {{ event.createdAtUtc | date: 'dd/MM/yyyy HH:mm' }}</small>
+                  @if (event.xmlArchivePath) {
+                    <small>XML {{ event.xmlArchivePath }}</small>
+                  }
+                  @if (event.previewArchivePath) {
+                    <small>Preview {{ event.previewArchivePath }}</small>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      </article>
+    </div>
+
+    <div class="entry-grid">
+      @for (entry of overview.entries; track entry.id) {
+        <article class="surface-card finance-card">
+          <div class="section-heading compact">
+            <div>
+              <p class="eyebrow">{{ entry.orderNumber || 'Avulso' }}</p>
+              <h3>{{ entry.type }} · {{ entry.amount | currency: 'BRL' }}</h3>
+            </div>
+            <span class="chip">{{ entry.status }}</span>
+          </div>
+
+          <strong>{{ entry.description }}</strong>
+          <span class="muted">{{ entry.counterparty }} · {{ entry.entrySource }}</span>
+          <small class="muted">{{ entry.paymentMethod }} · vencimento {{ entry.dueAtUtc | date: 'dd/MM/yyyy' }}</small>
+          @if (entry.boletoStatus || entry.boletoNumber) {
+            <small class="muted">Boleto: {{ entry.boletoStatus || 'Gerado' }} · {{ entry.boletoNumber || 'sem numero' }}</small>
+          }
+          @if (entry.notes) {
+            <small class="muted">{{ entry.notes }}</small>
+          }
+
+          <div class="action-row">
+            @if (entry.orderId) {
+              <a class="btn btn-outline-primary" [routerLink]="['/pedidos', entry.orderId]">Abrir pedido</a>
+            }
+            @if (entry.type === 'Receber') {
+              <button class="btn btn-outline-primary" type="button" [disabled]="actingId() === entry.id" (click)="generateBoleto(entry)">
+                Gerar boleto
+              </button>
+            }
+            @if (entry.status !== 'Liquidado') {
+              <button class="btn btn-primary" type="button" [disabled]="actingId() === entry.id" (click)="settle(entry)">
+                Liquidar
+              </button>
+            }
+          </div>
+        </article>
+      } @empty {
+        <article class="surface-card">
+          <p class="empty-state">Nenhum lancamento financeiro disponivel.</p>
+        </article>
+      }
+    </div>
+  } @else if (loading()) {
+    <article class="surface-card">
+      <p class="empty-state">Carregando financeiro...</p>
+    </article>
+  }
+</section>

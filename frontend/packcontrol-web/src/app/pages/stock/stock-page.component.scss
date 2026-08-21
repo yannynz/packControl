@@ -1,0 +1,43 @@
+.stock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.stock-card {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.stock-card.critical {
+  border-color: rgba(220, 38, 38, 0.28);
+}
+
+.compact {
+  margin-bottom: 0.3rem;
+}
+
+.stock-metrics,
+.action-row {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.stock-metrics > div {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  background: #f8fbff;
+}
+
+.stock-metrics small,
+.muted {
+  color: var(--pc-muted);
+}
+
+@media (max-width: 960px) {
+  .stock-metrics,
+  .action-row {
+    flex-direction: column;
+  }
+}
