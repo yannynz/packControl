@@ -1,5 +1,6 @@
 # PackControl
 
+
 Baseline funcional do ERP PackControl, alinhada ao `docs/plano-execucao-packcontrol.md` e atualizada ate `2026-03-28`.
 
 Documentos de status e go-live:
